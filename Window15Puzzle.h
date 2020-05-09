@@ -11,6 +11,7 @@
 #include <QSequentialAnimationGroup>
 #include <QThread>
 #include <QTimeLine>
+#include <QCloseEvent>
 
 
 QT_BEGIN_NAMESPACE
@@ -22,36 +23,7 @@ enum TMode {Game,
             JustShuffled,
             PuzzleMatched };
 
-using TRectangle = QPushButton*;
-
-class TGradientAnimation
-{
-public:
-    TGradientAnimation(QWidget *ATarget, QMainWindow *AMainWindow);
-    ~TGradientAnimation();
-
-    QWidget *Target;
-    QMainWindow *MainWindow;
-    QTimeLine *timeLine;
-
-    QColor StartColor1;
-    QColor StartColor2;
-
-    QColor StopColor1;
-    QColor StopColor2;
-
-    QColor CurColor1;
-    QColor CurColor2;
-
-    double Delay_ms = 0;
-    double Duration_ms = 1000;
-    QEasingCurve AInterpolation = QEasingCurve::Linear;
-    bool AutoReverse;
-    bool FirstStart = true;
-    void Stop();
-    void Start();
-
-};
+using TTile = QPushButton*;
 
 class TForm15Puzzle : public QMainWindow
 {
@@ -77,11 +49,7 @@ private slots:
 
 //    void ButtonMenuClick();
 
-//    void ButtonDisappeareClick();
-//    void ButtonPlaceClick();
-//    void ButtonTimeRunningOutClick();
 //    void ButtonCloseClick();
-//    void ButtonBaseNotChangedClick();
 
 
     void on_ButtonPlace_clicked();
@@ -113,7 +81,7 @@ public:
     void SetBase( const int Value );
 
     void CreateTiles( );
-    std::vector< TRectangle > Tiles;
+    std::vector< TTile > Tiles;
     int TileSize;
     int TileSpacing;
     int SpaceX, SpaceY;
@@ -125,7 +93,7 @@ public:
 
     void TileMouseDown();
     bool TryMoveTile( int TilePosition, float MoveAniDuration );
-    void AnimateMoveTile( TRectangle ATile, float MoveAniDuration );
+    void AnimateMoveTile( TTile ATile, float MoveAniDuration );
     bool CheckCanPuzzleMatch( );
     void CheckPuzzleMatched( );
     void CalcConsts( );
@@ -141,9 +109,10 @@ public:
 //    void StopBlinkShuffle( );
 
     void resizeEvent(QResizeEvent* event);
+    void closeEvent (QCloseEvent *event);
 
     inline int  ind( int Row, int Col );
-    int ActualPosition(TRectangle ATile);
+    int ActualPosition(TTile ATile);
     void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
 
     void AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
@@ -156,6 +125,36 @@ public:
 
     int TimeRemaining;
 
+};
+
+
+class TGradientAnimation
+{
+public:
+    TGradientAnimation(QWidget *ATarget);
+    ~TGradientAnimation();
+
+    QWidget *Target;
+    QTimeLine *timeLine;
+
+    QColor StartColor1;
+    QColor StartColor2;
+
+    QColor StopColor1;
+    QColor StopColor2;
+
+    QColor CurColor1;
+    QColor CurColor2;
+
+    double Delay_ms = 0;
+    double Duration_ms = 1000;
+    QEasingCurve AInterpolation = QEasingCurve::Linear;
+    bool AutoReverse;
+    bool FirstStart = true;
+    void Stop();
+    void Start();
 
 };
+
+
 #endif // MAINWINDOW_H

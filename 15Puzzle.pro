@@ -25,6 +25,8 @@ HEADERS += \
 FORMS += \
 	Window15Puzzle.ui
 
+RC_ICONS = 15Pazzle_Icon.ico
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

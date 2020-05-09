@@ -6,6 +6,14 @@ const double MaxMoveAniDuration = 150;
 const double MinMoveAniDuration = 1;
 
 
+QString GenerateStyleSheet(const QColor &color1, const QColor &color2)
+{
+    return QString("border: 4px solid #FFE55555;\n"
+                   "border-radius: 4px;\n"
+    "background-color: qlineargradient(spread:pad, x1:0.35, y1:0.35, x2:0.9, y2:0.9, "
+    "stop:0 ") + color1.name() + ", stop:1 " + color2.name() + ");";
+}
+
 
 TForm15Puzzle::TForm15Puzzle(QWidget *parent)
     : QMainWindow(parent)
@@ -26,155 +34,24 @@ TForm15Puzzle::TForm15Puzzle(QWidget *parent)
 
     LastResizeTime = QDateTime::currentDateTime();   //To prevent resize on start on Android
 
-    TileFillNormalColor1 = QColor( 255, 244, 71 );
-    TileFillNormalColor2 = QColor( 175, 255, 100 );
 
-    TGradientAnimation *GradientAni = new TGradientAnimation(ui->Tile1, this);
-    GradientAni->StartColor1 = TileFillNormalColor1;
-    GradientAni->StartColor2 = TileFillNormalColor2;
+    TileFillNormalColor1 = QColor("bisque");
+    TileFillNormalColor2 = QColor("#FFABE024");
 
+    TGradientAnimation *GradientAni = new TGradientAnimation(ui->Tile1);
     ui->Tile1->setProperty("GradientAni", QVariant(uint(GradientAni)) );
+
+    ui->Tile1->setStyleSheet(GenerateStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
+
     ui->Tile1->raise();
 
+    srand(unsigned(time(0)));
     SetBase(4);
 }
 
 TForm15Puzzle::~TForm15Puzzle()
 {
     delete ui;
-}
-
-
-
-//void TForm15Puzzle::on_Tile1_clicked()
-//{
-//    QRect geometry = ui->Tile1->geometry();
-//    geometry.adjust(20, 0, 20, 0);
-
-//    AnimateGeometryDelay(ui->Tile1, geometry, 5000, 0, QEasingCurve::OutExpo );
-//}
-
-void TForm15Puzzle::AnimatePropertyDelay(QObject * const Target, const QByteArray &PropertyName,
-                  const QVariant &Value, uint Duration_ms, uint Delay_ms,
-                  QEasingCurve AInterpolation)
-{
-    QPropertyAnimation *ani = new QPropertyAnimation(Target, PropertyName);
-    ani->setDuration(Duration_ms);
-
-    ani->setEasingCurve(AInterpolation);
-
-    ani->setEndValue(Value);
-
-    if (Delay_ms == 0)
-        ani->start(QAbstractAnimation::DeleteWhenStopped);
-    else
-        QTimer::singleShot(Delay_ms, ani, SLOT(start()));
-
-
-//    QSequentialAnimationGroup group;
-    if (WaitAnimationEnd)
-    while (ani->state() == QPropertyAnimation::Running)
-    {
-            qApp->processEvents();
-            QThread::msleep(1);
-
-    }
-}
-
-
-QColor InterpolateColor(const QColor &Start, const QColor &Stop, double T)
-{
-  QColor Result;
-  Result.setAlpha(  Start.alpha() + ((Stop.alpha()   - Start.alpha() ) * T) );
-  Result.setRed(    Start.red()   + ((Stop.red()     - Start.red()   ) * T) );
-  Result.setGreen(  Start.green() + ((Stop.green()   - Start.green() ) * T) );
-  Result.setBlue(   Start.blue()  + ((Stop.blue()    - Start.blue()  ) * T) );
-  return Result;
-}
-
-QString GenerateStyleSheet(const QColor &color1, const QColor &color2)
-{
-
-    return QString("border: 4px outset red;\n"
-    "background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, "
-    "stop:0 ") + color1.name() + ", stop:1 " + color2.name() + ");";
-
-}
-
-
-TGradientAnimation::TGradientAnimation(QWidget *ATarget, QMainWindow *AMainWindow)
-{
-   Target = ATarget;
-   MainWindow = AMainWindow;
-   timeLine = new QTimeLine(Duration_ms, Target);
-}
-
-TGradientAnimation::~TGradientAnimation()
-{
-//    MainWindow->connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
-   timeLine->stop();
-   delete timeLine;
-}
-
-void TGradientAnimation::Stop()
-{
-    timeLine->stop();
-}
-
-void TGradientAnimation::Start()
-{
-    int FrameRange = 1023;
-    timeLine->setFrameRange(0, FrameRange);
-    timeLine->setEasingCurve(AInterpolation);
-    timeLine->setDuration(Duration_ms);
-
-    if (FirstStart)
-        FirstStart = false;
-    else
-    {
-        StartColor1 = CurColor1;
-        StartColor2 = CurColor2;
-    }
-
-    if (AutoReverse)
-        timeLine->setDuration(Duration_ms * 2);
-    else
-        timeLine->setDuration(Duration_ms);
-
-    MainWindow->connect(timeLine, &QTimeLine::frameChanged, [=](int frame){
-        double NormalizedTime = double(frame) / FrameRange;
-
-        if (AutoReverse)
-        {
-            if (NormalizedTime < 0.5)
-                NormalizedTime = NormalizedTime * 2;
-            else
-                NormalizedTime = (1 - NormalizedTime) * 2;
-        }
-
-        CurColor1 = InterpolateColor(StartColor1, StopColor1, NormalizedTime);
-        CurColor2 = InterpolateColor(StartColor2, StopColor2, NormalizedTime);
-        Target->setStyleSheet(GenerateStyleSheet(CurColor1, CurColor2));
-    });
-
-    timeLine->start();
-
-}
-
-
-void TForm15Puzzle::on_ChangeBackground_clicked()
-{
-//     ui->Tile1->setStyleSheet(QString("background-color: rgb(%1, %2, %3);").arg(color1.red()).arg(color1.green()).arg(color1.blue()));
-//    TGradientAnimation *GradientAni = new TGradientAnimation(ui->Tile1, this);
-
-  TGradientAnimation *GradientAni = ( TGradientAnimation* )ui->Tile1->property("GradientAni").toUInt() ;
-
-    GradientAni->StopColor1 = QColor("olive");;
-    GradientAni->StopColor2 = QColor("darkorange");
-    GradientAni->Delay_ms = 0;
-    GradientAni->Duration_ms = 500;
-    GradientAni->AutoReverse = true;
-    GradientAni->Start();
 }
 
 
@@ -241,7 +118,7 @@ void  TForm15Puzzle::TimerCreateTilesTimer( )
 void  TForm15Puzzle::CreateTiles( )
 {
 
-  TRectangle Tile1 = ui->Tile1;
+  TTile Tile1 = ui->Tile1;
 
   Tile1->setVisible(false);
 
@@ -251,7 +128,7 @@ void  TForm15Puzzle::CreateTiles( )
         Tiles[i] = NULL;
       else
       {
-        TGradientAnimation *GradientAni = new TGradientAnimation(Tiles[i], this);
+          TGradientAnimation *GradientAni = ( TGradientAnimation* )Tiles[i]->property("GradientAni").toUInt() ;
         delete GradientAni;
         delete Tiles[i];
         Tiles[i] = NULL;
@@ -259,9 +136,10 @@ void  TForm15Puzzle::CreateTiles( )
   Tiles.resize(Base * Base);
   Tiles[0] = Tile1;
   for ( uint i = 0; i < Tiles.size() - 1; i++)
+  {
     if ( Tiles[i] == NULL )
     {
-      TRectangle NewTile;
+      TTile NewTile;
 
       NewTile = new QPushButton(this);
 
@@ -270,20 +148,27 @@ void  TForm15Puzzle::CreateTiles( )
       NewTile->setText(QString::number(i + 1));
 
 
-      TGradientAnimation *GradientAni = new TGradientAnimation(NewTile, this);
-      GradientAni->StartColor1 = TileFillNormalColor1;
-      GradientAni->StartColor2 = TileFillNormalColor2;
+      TGradientAnimation *GradientAni = new TGradientAnimation(NewTile);
       NewTile->setProperty("GradientAni", QVariant(uint(GradientAni)) );
 
-
-////      NewTile.Position.X := Tile1.Position.X;
-////      NewTile.Position.Y := Tile1.Position.Y;
-////      NewTile.Opacity := 1;
       NewTile->setStyleSheet(Tile1->styleSheet());
+
+//      QFont font = Tile1->font();
+//      font.setPointSize(10);
+//      NewTile->setFont(font);
+
       NewTile->setParent(this);
 //      NewTile.SendToBack;
       Tiles[i] = NewTile;
     }
+    if ( Tiles[i] != NULL )
+    {
+      TGradientAnimation *GradientAni = ( TGradientAnimation* )Tiles[i]->property("GradientAni").toUInt() ;
+      GradientAni->StartColor1 = TileFillNormalColor1;
+      GradientAni->StartColor2 = TileFillNormalColor2;
+      GradientAni->FirstStart = true;
+    }
+  }
 
   if ( Tiles[Tiles.size() - 1] != NULL )
     Tiles[Tiles.size() - 1] = NULL;
@@ -303,7 +188,7 @@ void TForm15Puzzle::DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uin
 
 
 
-int TForm15Puzzle::ActualPosition(TRectangle ATile)
+int TForm15Puzzle::ActualPosition(TTile ATile)
 {
     for ( uint i = 0; i < Tiles.size(); i++)
         if (Tiles[i] == ATile)
@@ -316,7 +201,7 @@ int TForm15Puzzle::ActualPosition(TRectangle ATile)
 void  TForm15Puzzle::on_Tile1_pressed( )
 {
   QObject* Sender = QObject::sender();
-  TRectangle SenderTile = (TRectangle) Sender;
+  TTile SenderTile = (TTile) Sender;
   bool WasMoved = false;
   if ( Mode == JustShuffled )
     SetMode(Game);
@@ -390,7 +275,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
 }
 
 
-void  TForm15Puzzle::AnimateMoveTile( TRectangle ATile, float MoveAniDuration )
+void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration )
 {
   uint16_t NewRow = 0, NewCol = 0;
   int X = 0, Y = 0;
@@ -448,6 +333,8 @@ void  TForm15Puzzle::CheckPuzzleMatched( )
 
 void TForm15Puzzle::on_ButtonShuffle_clicked()
 {
+    AnimateNormalizeTilesColor();
+
     int NewI = 0;
     int MoveCount = 0;
     float MoveAniDuration = 0.0;
@@ -479,9 +366,78 @@ void TForm15Puzzle::on_ButtonShuffle_clicked()
     CheckPuzzleMatched();
 }
 
+
+void TForm15Puzzle::TimerTimeTimer()
+{
+    uint16_t Min = 0, Sec = 0;
+    TimeRemaining = TimeRemaining - 1;
+    DivMod( TimeRemaining, 60, Min, Sec );
+    ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
+
+    if ( TimeRemaining == 0 )
+    {
+      SetMode(GameOver);
+      AnimateTimeOver();
+//      StartBlinkShuffle();
+      return;
+    }
+    if ( TimeRemaining <= 10 )
+      AnimateTimeRunningOut();
+
+}
+
+
+void  TForm15Puzzle::SetMaxTime( )
+{
+  uint16_t Sec = 0, Min = 0;
+  TimeRemaining = ( ( Base * Base * Base * Base ) / 20 ) * 10;
+  DivMod( TimeRemaining, 60, Min, Sec );
+  ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
+}
+
+
+void TForm15Puzzle::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    TimerResize->stop();
+    TimerResize->start();
+
+}
+
+
+
+void TForm15Puzzle::TimerResizeTimer()
+{
+    TimerResize->stop();
+    uint TimeFromLastResize_ms = LastResizeTime.msecsTo(QDateTime::currentDateTime());
+
+    if ( TimeFromLastResize_ms > 500 )
+    {
+      AnimatePlaceTilesFast();
+      LastResizeTime = QDateTime::currentDateTime();
+    }
+
+}
+
+void TForm15Puzzle::closeEvent(QCloseEvent *event)
+{
+    if ( ! ClosingAnimation )
+    {
+      AnimateTilesDisappeare();
+      ClosingAnimation = true;
+
+      QTimer::singleShot(520 + 30 * Tiles.size(), this, SLOT(close()));
+
+      event->ignore();
+    }
+
+}
+
+//-------------------------------   Animations   -----------------------------
+
 void  TForm15Puzzle::CalcConsts( )
 {
-  int Height = this->height();
+  int Height = this->height() - 50;
   int Width = this->width();
   /*# with PanelClient do */
   if ( Height > Width )
@@ -499,7 +455,7 @@ void  TForm15Puzzle::CalcConsts( )
   TileSpacing = round( TileSize * 0.06 );
   TileSize = round( TileSize * 0.94 );
   SpaceX = SpaceX + round( double( TileSpacing ) / 2 );
-  SpaceY = SpaceY + round( double( TileSpacing ) / 2 );
+  SpaceY = SpaceY + round( double( TileSpacing ) / 2 ) + 50;
 }
 
 
@@ -610,65 +566,12 @@ void  TForm15Puzzle::AnimatePrepareBeforePlace( )
 
 
       Tiles[i]->setGeometry(geometry);
+      Tiles[i]->setStyleSheet(GenerateStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
       Tiles[i]->show();
     }
 }
 
 
-
-
-
-void  TForm15Puzzle::SetMaxTime( )
-{
-  uint16_t Sec = 0, Min = 0;
-  TimeRemaining = ( ( Base * Base * Base * Base ) / 20 ) * 10;
-  DivMod( TimeRemaining, 60, Min, Sec );
-  ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
-}
-
-
-void TForm15Puzzle::TimerTimeTimer()
-{
-    uint16_t Min = 0, Sec = 0;
-    TimeRemaining = TimeRemaining - 1;
-    DivMod( TimeRemaining, 60, Min, Sec );
-    ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
-
-    if ( TimeRemaining == 0 )
-    {
-      SetMode(GameOver);
-      AnimateTimeOver();
-//      StartBlinkShuffle();
-      return;
-    }
-    if ( TimeRemaining <= 10 )
-      AnimateTimeRunningOut();
-
-}
-
-
-
-void TForm15Puzzle::resizeEvent(QResizeEvent *event)
-{
-    QMainWindow::resizeEvent(event);
-    TimerResize->stop();
-    TimerResize->start();
-
-}
-
-
-void TForm15Puzzle::TimerResizeTimer()
-{
-    TimerResize->stop();
-    uint TimeFromLastResize_ms = LastResizeTime.msecsTo(QDateTime::currentDateTime());
-
-    if ( TimeFromLastResize_ms > 500 )
-    {
-      AnimatePlaceTilesFast();
-      LastResizeTime = QDateTime::currentDateTime();
-    }
-
-}
 
 
 void  TForm15Puzzle::AnimateTimeRunningOut( )
@@ -713,7 +616,7 @@ void  TForm15Puzzle::AnimateNormalizeTilesColor( )
       GradientAni->StopColor1 = TileFillNormalColor1;
       GradientAni->StopColor2 = TileFillNormalColor2;
       GradientAni->Delay_ms = 0;
-      GradientAni->Duration_ms = 200;
+      GradientAni->Duration_ms = 500;
       GradientAni->AutoReverse = false;
       GradientAni->Start();
     }
@@ -731,13 +634,14 @@ void  TForm15Puzzle::AnimatePuzzleMatched( )
       GradientAni->Stop();
       GradientAni->StopColor1 = QColor("lawngreen");
       GradientAni->StopColor2 = QColor("gold");
-      GradientAni->Delay_ms = ( 1 + i * 0.1 );
+      GradientAni->Delay_ms = ( 1 + i * 100 );
       GradientAni->Duration_ms = 500 ;
       GradientAni->AutoReverse = false;
       GradientAni->Start();
     }
 }
 
+//-------------------------------  Test different Animations   -----------------------------
 
 void TForm15Puzzle::on_ButtonPlace_clicked()
 {
@@ -772,4 +676,125 @@ void TForm15Puzzle::on_ButtonTimeOver_clicked()
 {
     AnimateTimeOver( );
 //    ui->ButtonTimeOver->setText( QColor("gold").name() );
+}
+
+
+//---------------------------  Realization of Property Animation   -----------------------------
+
+
+void TForm15Puzzle::AnimatePropertyDelay(QObject * const Target, const QByteArray &PropertyName,
+                  const QVariant &Value, uint Duration_ms, uint Delay_ms,
+                  QEasingCurve AInterpolation)
+{
+    QPropertyAnimation *ani = new QPropertyAnimation(Target, PropertyName);
+    ani->setDuration(Duration_ms);
+
+    ani->setEasingCurve(AInterpolation);
+
+    ani->setEndValue(Value);
+
+    if (Delay_ms == 0)
+        ani->start(QAbstractAnimation::DeleteWhenStopped);
+    else
+        QTimer::singleShot(Delay_ms, ani, SLOT(start()));
+
+
+//    QSequentialAnimationGroup group;
+    if (WaitAnimationEnd)
+    while (ani->state() == QPropertyAnimation::Running)
+    {
+            qApp->processEvents();
+            QThread::msleep(1);
+
+    }
+}
+
+//-----------------------------   Realization of Gradient Animation    -----------------------------
+
+QColor InterpolateColor(const QColor &Start, const QColor &Stop, double T)
+{
+  QColor Result;
+  Result.setAlpha(  Start.alpha() + ((Stop.alpha()   - Start.alpha() ) * T) );
+  Result.setRed(    Start.red()   + ((Stop.red()     - Start.red()   ) * T) );
+  Result.setGreen(  Start.green() + ((Stop.green()   - Start.green() ) * T) );
+  Result.setBlue(   Start.blue()  + ((Stop.blue()    - Start.blue()  ) * T) );
+  return Result;
+}
+
+
+
+TGradientAnimation::TGradientAnimation(QWidget *ATarget)
+{
+   Target = ATarget;
+   timeLine = new QTimeLine(Duration_ms, Target);
+
+   int FrameRange = 1023;
+   timeLine->setFrameRange(0, FrameRange);
+
+   QObject::connect(timeLine, &QTimeLine::frameChanged, [=](int frame){
+       double NormalizedTime = double(frame) / FrameRange;
+
+       if (AutoReverse)
+       {
+           if (NormalizedTime < 0.5)
+               NormalizedTime = NormalizedTime * 2;
+           else
+               NormalizedTime = (1 - NormalizedTime) * 2;
+       }
+
+       CurColor1 = InterpolateColor(StartColor1, StopColor1, NormalizedTime);
+       CurColor2 = InterpolateColor(StartColor2, StopColor2, NormalizedTime);
+       Target->setStyleSheet(GenerateStyleSheet(CurColor1, CurColor2));
+   });
+}
+
+TGradientAnimation::~TGradientAnimation()
+{
+//    QObject::connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
+   timeLine->stop();
+   delete timeLine;
+}
+
+void TGradientAnimation::Stop()
+{
+    timeLine->stop();
+}
+
+void TGradientAnimation::Start()
+{
+    timeLine->setEasingCurve(AInterpolation);
+
+    if (FirstStart)
+        FirstStart = false;
+    else
+    {
+        StartColor1 = CurColor1;
+        StartColor2 = CurColor2;
+    }
+
+    if (AutoReverse)
+        timeLine->setDuration(Duration_ms * 2);
+    else
+        timeLine->setDuration(Duration_ms);
+
+
+
+    if (Delay_ms == 0)
+        timeLine->start();
+    else
+        QTimer::singleShot(Delay_ms, timeLine, SLOT(start()));
+
+}
+
+
+void TForm15Puzzle::on_ChangeBackground_clicked()
+{
+//  TGradientAnimation *GradientAni = ( TGradientAnimation* )ui->Tile1->property("GradientAni").toUInt() ;
+
+//    GradientAni->StopColor1 = QColor("olive");;
+//    GradientAni->StopColor2 = QColor("darkorange");
+//    GradientAni->Delay_ms = 0;
+//    GradientAni->Duration_ms = 500;
+//    GradientAni->AutoReverse = true;
+//    GradientAni->Start();
 }
