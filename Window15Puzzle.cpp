@@ -25,8 +25,6 @@ TForm15Puzzle::TForm15Puzzle(QWidget *parent)
     connect(TimerTime, SIGNAL(timeout()), this, SLOT(TimerTimeTimer()));
     TimerTime->setInterval(1000);
 
-    TimerCreateTiles = new QTimer();
-    connect(TimerCreateTiles, SIGNAL(timeout()), this, SLOT(TimerCreateTilesTimer()));
 
     TimerResize = new QTimer();
     connect(TimerResize, SIGNAL(timeout()), this, SLOT(TimerResizeTimer()));
@@ -42,6 +40,7 @@ TForm15Puzzle::TForm15Puzzle(QWidget *parent)
     ui->Tile1->setProperty("GradientAni", QVariant(uint(GradientAni)) );
 
     ui->Tile1->setStyleSheet(GenerateStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
+//    background-color: rgb(244, 244, 244);
 
     ui->Tile1->raise();
 
@@ -96,22 +95,17 @@ void  TForm15Puzzle::SetBase( const int Value )
   AnimateTilesDisappeare();
   Base = Value;
   SetMaxTime();
-  if ( Tiles.size() > 0 )
-    TimerCreateTiles->setInterval( 520 + 30 * Tiles.size() );
-  else
-    TimerCreateTiles->setInterval(50);
-  TimerCreateTiles->start();
+
+    QTimer::singleShot(100, this, SLOT(TimerCreateTilesTimer()));
 }
 
 
 void  TForm15Puzzle::TimerCreateTilesTimer( )
 {
-  TimerCreateTiles->stop();
   CreateTiles();
   AnimatePrepareBeforePlace();
   AnimatePlaceTilesFast();
 }
-
 
 
 
@@ -157,7 +151,7 @@ void  TForm15Puzzle::CreateTiles( )
 //      font.setPointSize(10);
 //      NewTile->setFont(font);
 
-      NewTile->setParent(this);
+      NewTile->setParent(ui->PanelClient);
 //      NewTile.SendToBack;
       Tiles[i] = NewTile;
     }
@@ -205,13 +199,13 @@ void  TForm15Puzzle::on_Tile1_pressed( )
   bool WasMoved = false;
   if ( Mode == JustShuffled )
     SetMode(Game);
-  WasMoved = TryMoveTile( ActualPosition(SenderTile), MaxMoveAniDuration );
+  WasMoved = TryMoveTile( ActualPosition(SenderTile), MaxMoveAniDuration, false );
   if ( WasMoved )
     CheckPuzzleMatched();
 }
 
 
-bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
+bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd )
 {
   uint16_t RowPressed = 0, ColPressed = 0;
   int RowNoTile = 0, ColNoTile = 0;
@@ -230,7 +224,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
           Tiles[NewPosition] = Tiles[ind( RowToMove, ColPressed )];
 //          Tiles[NewPosition].Tag = NewPosition;
           Tiles[ind( RowToMove, ColPressed )] = NULL;
-          AnimateMoveTile( Tiles[NewPosition], MoveAniDuration );
+          AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
           WasMoved = true;
         }
       if ( RowPressed > RowNoTile )
@@ -240,7 +234,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
           Tiles[NewPosition] = Tiles[ind( RowToMove, ColPressed )];
 //          Tiles[NewPosition].Tag = NewPosition;
           Tiles[ind( RowToMove, ColPressed )] = NULL;
-          AnimateMoveTile( Tiles[NewPosition], MoveAniDuration );
+          AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
           WasMoved = true;
         }
     }
@@ -256,7 +250,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
             Tiles[NewPosition] = Tiles[ind( RowPressed, ColToMove )];
 //            Tiles[NewPosition].Tag = NewPosition;
             Tiles[ind( RowPressed, ColToMove )] = NULL;
-            AnimateMoveTile( Tiles[NewPosition], MoveAniDuration );
+            AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
             WasMoved = true;
           }
         if ( ColPressed > ColNoTile )
@@ -266,7 +260,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
             Tiles[NewPosition] = Tiles[ind( RowPressed, ColToMove )];
 //            Tiles[NewPosition].Tag = NewPosition;
             Tiles[ind( RowPressed, ColToMove )] = NULL;
-            AnimateMoveTile( Tiles[NewPosition], MoveAniDuration );
+            AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
             WasMoved = true;
           }
       }
@@ -275,7 +269,7 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration )
 }
 
 
-void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration )
+void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd )
 {
   uint16_t NewRow = 0, NewCol = 0;
   int X = 0, Y = 0;
@@ -290,7 +284,7 @@ void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration )
 
   if ( MoveAniDuration > 0 )
   {
-    AnimatePropertyDelay(ATile, "geometry", geometry, MoveAniDuration, 0, QEasingCurve::OutExpo );
+    AnimatePropertyDelay(ATile, "geometry", geometry, MoveAniDuration, 0, QEasingCurve::OutExpo, true, WaitAnimationEnd );
   }
   else
   {
@@ -338,7 +332,6 @@ void TForm15Puzzle::on_ButtonShuffle_clicked()
     int NewI = 0;
     int MoveCount = 0;
     float MoveAniDuration = 0.0;
-    WaitAnimationEnd = true;
     MoveCount = Tiles.size() * Tiles.size();
     MoveAniDuration = MaxMoveAniDuration;
     for ( int i = 1; i <= MoveCount; i++)
@@ -356,9 +349,8 @@ void TForm15Puzzle::on_ButtonShuffle_clicked()
       {
         NewI = rand() % Tiles.size();
       }
-      while ( ! ( TryMoveTile( NewI, MoveAniDuration ) ) );
+      while ( ! ( TryMoveTile( NewI, MoveAniDuration, /*WaitAnimationEnd*/true ) ) );
     }
-    WaitAnimationEnd = false;
     SetMaxTime();
 //    StopBlinkShuffle();
 
@@ -425,10 +417,6 @@ void TForm15Puzzle::closeEvent(QCloseEvent *event)
     {
       AnimateTilesDisappeare();
       ClosingAnimation = true;
-
-      QTimer::singleShot(520 + 30 * Tiles.size(), this, SLOT(close()));
-
-      event->ignore();
     }
 
 }
@@ -437,9 +425,9 @@ void TForm15Puzzle::closeEvent(QCloseEvent *event)
 
 void  TForm15Puzzle::CalcConsts( )
 {
-  int Height = this->height() - 50;
-  int Width = this->width();
-  /*# with PanelClient do */
+  int Height = ui->PanelClient->height();
+  int Width = ui->PanelClient->width();
+
   if ( Height > Width )
   {
     SpaceX = round( double( Width ) / 20 );
@@ -455,7 +443,7 @@ void  TForm15Puzzle::CalcConsts( )
   TileSpacing = round( TileSize * 0.06 );
   TileSize = round( TileSize * 0.94 );
   SpaceX = SpaceX + round( double( TileSpacing ) / 2 );
-  SpaceY = SpaceY + round( double( TileSpacing ) / 2 ) + 50;
+  SpaceY = SpaceY + round( double( TileSpacing ) / 2 );
 }
 
 
@@ -489,6 +477,9 @@ void  TForm15Puzzle::AnimatePlaceTilesFast( )
 void  TForm15Puzzle::AnimateTilesDisappeare( )
 {
   int X = 0, Y = 0;
+
+  QList<QPropertyAnimation*> AniList;
+
   for ( uint i = 0; i < Tiles.size(); i++)
     if ( Tiles[i] != NULL )
     {
@@ -499,15 +490,29 @@ void  TForm15Puzzle::AnimateTilesDisappeare( )
 
         geometry.setRect(X, Y, 0, 0);
 
-        AnimatePropertyDelay(Tiles[i], "geometry", geometry, 400, ( 0 + 30 * i ), QEasingCurve::/*OutExpo*/InBack );
+        auto ani = AnimatePropertyDelay(Tiles[i], "geometry", geometry, 400, ( 0 + 30 * i ),
+                                        QEasingCurve::/*OutExpo*/InBack, false );
 
-//      TAnimator.AnimateFloatDelay( Tiles[i], "Scale.X", 0.1, 0.4 * slowdown, ( 0.03 * i ) * slowdown );
-//      TAnimator.AnimateFloatDelay( Tiles[i], "Scale.Y", 0.1, 0.4 * slowdown, ( 0.03 * i ) * slowdown );
-//      TAnimator.AnimateFloatDelay( Tiles[i], "RotationAngle", 45, 0.4 * slowdown, ( 0.03 * i ) * slowdown );
-//      TAnimator.AnimateFloatDelay( Tiles[i], "Position.Y", Tiles[i].Position.Y + TileSize, 0.4 * slowdown, ( 0.03 * i ) * slowdown, TAnimationType.In, TInterpolationType.Back );
-//      TAnimator.AnimateFloatDelay( Tiles[i], "Position.X", Tiles[i].Position.X + Round( double( TileSize ) / 2 ), 0.4 * slowdown, ( 0.03 * i ) * slowdown );
-//      TAnimator.AnimateFloatDelay( Tiles[i], "Opacity", 0, 0.4 * slowdown, ( 0.1 + 0.03 * i ) * slowdown );
+        AniList.append(ani);
     }
+
+//Wait end of all animations;
+  bool SomeAniRunning;
+  do
+  {
+      SomeAniRunning = false;
+      for ( int i = 0; i < AniList.size(); i++)
+          if (AniList.at(i)->state() == QPropertyAnimation::Running)
+              SomeAniRunning = true;
+
+      qApp->processEvents();
+      QThread::msleep(1);
+
+  }  while(SomeAniRunning);
+
+  for ( int i = 0; i < AniList.size(); i++)
+      delete AniList.at(i);
+
 }
 
 
@@ -535,7 +540,7 @@ void  TForm15Puzzle::AnimateBaseNotChanged( )
           Y = geometry.y() + offset;
 
           geometry.setRect(X, Y, size, size );
-          AnimatePropertyDelay(Tiles[i], "geometry", geometry, 300, ( 0 + 30 * i ), QEasingCurve::InOutExpo );
+          AnimatePropertyDelay(Tiles[i], "geometry", geometry, 300, ( 0 + 30 * i ), QEasingCurve::InBack );
 
           AnimatePropertyDelay(Tiles[i], "geometry", OrigGeometry, 300, ( 350 + 30 * i ), QEasingCurve::OutBack );
       }
@@ -682,9 +687,9 @@ void TForm15Puzzle::on_ButtonTimeOver_clicked()
 //---------------------------  Realization of Property Animation   -----------------------------
 
 
-void TForm15Puzzle::AnimatePropertyDelay(QObject * const Target, const QByteArray &PropertyName,
+QPropertyAnimation* AnimatePropertyDelay(QObject * const Target, const QByteArray &PropertyName,
                   const QVariant &Value, uint Duration_ms, uint Delay_ms,
-                  QEasingCurve AInterpolation)
+                  QEasingCurve AInterpolation, bool DeleteWhenStopped, bool WaitAnimationEnd)
 {
     QPropertyAnimation *ani = new QPropertyAnimation(Target, PropertyName);
     ani->setDuration(Duration_ms);
@@ -693,20 +698,27 @@ void TForm15Puzzle::AnimatePropertyDelay(QObject * const Target, const QByteArra
 
     ani->setEndValue(Value);
 
+    QObject::connect(ani, &QPropertyAnimation::finished, [=](){
+        if (DeleteWhenStopped)
+                delete ani;
+    });
+
+
     if (Delay_ms == 0)
-        ani->start(QAbstractAnimation::DeleteWhenStopped);
+        ani->start();
     else
         QTimer::singleShot(Delay_ms, ani, SLOT(start()));
 
 
-//    QSequentialAnimationGroup group;
     if (WaitAnimationEnd)
-    while (ani->state() == QPropertyAnimation::Running)
-    {
+        while (ani->state() == QPropertyAnimation::Running)
+        {
             qApp->processEvents();
             QThread::msleep(1);
 
-    }
+        }
+
+    return ani;
 }
 
 //-----------------------------   Realization of Gradient Animation    -----------------------------

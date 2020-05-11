@@ -12,6 +12,8 @@
 #include <QThread>
 #include <QTimeLine>
 #include <QCloseEvent>
+#include <QList>
+
 
 
 QT_BEGIN_NAMESPACE
@@ -38,35 +40,23 @@ private slots:
 
     void on_ButtonShuffle_clicked();
 
-
     void TimerCreateTilesTimer();
     void TimerTimeTimer();
     void TimerResizeTimer();
-
-
 //    void PanelClientResize();
-//    void FormClose();
-
 //    void ButtonMenuClick();
-
-//    void ButtonCloseClick();
-
-
-    void on_ButtonPlace_clicked();
-
-    void on_ButtonDisappeare_clicked();
-
-    void on_ChangeBackground_clicked();
 
     void on_Button3x3_clicked();
     void on_Button4x4_clicked();
     void on_Button5x5_clicked();
 
+    void on_ButtonPlace_clicked();
+    void on_ButtonDisappeare_clicked();
     void on_ButtonPuzzleMatched_clicked();
-
     void on_ButtonTimeRunningOut_clicked();
-
     void on_ButtonTimeOver_clicked();
+
+    void on_ChangeBackground_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -88,12 +78,11 @@ public:
     QColor TileFillNormalColor1, TileFillNormalColor2;
     QDateTime LastResizeTime;
     bool ClosingAnimation;
-    bool WaitAnimationEnd = false;
     bool GreenTiles;
 
     void TileMouseDown();
-    bool TryMoveTile( int TilePosition, float MoveAniDuration );
-    void AnimateMoveTile( TTile ATile, float MoveAniDuration );
+    bool TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd );
+    void AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd );
     bool CheckCanPuzzleMatch( );
     void CheckPuzzleMatched( );
     void CalcConsts( );
@@ -115,18 +104,18 @@ public:
     int ActualPosition(TTile ATile);
     void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
 
-    void AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
-                      const QVariant &Value, uint Duration_ms = 200, uint Delay_ms = 0,
-                      QEasingCurve AInterpolation = QEasingCurve::Linear);
 
     QTimer *TimerTime;
-    QTimer *TimerCreateTiles;
     QTimer *TimerResize;
 
     int TimeRemaining;
 
 };
 
+QPropertyAnimation* AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
+                  const QVariant &Value, uint Duration_ms = 200, uint Delay_ms = 0,
+                  QEasingCurve AInterpolation = QEasingCurve::Linear,
+                  bool DeleteWhenStopped = true, bool WaitAnimationEnd = false);
 
 class TGradientAnimation
 {
