@@ -21,6 +21,7 @@ TForm15Puzzle::TForm15Puzzle(QWidget *parent)
 {
     ui->setupUi(this);
 
+
     TimerTime = new QTimer();
     connect(TimerTime, SIGNAL(timeout()), this, SLOT(TimerTimeTimer()));
     TimerTime->setInterval(1000);
@@ -102,6 +103,10 @@ void  TForm15Puzzle::SetBase( const int Value )
 
 void  TForm15Puzzle::TimerCreateTilesTimer( )
 {
+#ifdef Q_OS_ANDROID
+    on_ButtonScaleForAndroid_clicked();
+#endif
+
   CreateTiles();
   AnimatePrepareBeforePlace();
   AnimatePlaceTilesFast();
@@ -179,6 +184,8 @@ void TForm15Puzzle::DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uin
     Result = Dividend / Divisor;
     Remainder = Dividend % Divisor;
 }
+
+
 
 
 
@@ -498,17 +505,22 @@ void  TForm15Puzzle::AnimateTilesDisappeare( )
 
 //Wait end of all animations;
   bool SomeAniRunning;
-  do
+  while(true)
   {
       SomeAniRunning = false;
       for ( int i = 0; i < AniList.size(); i++)
           if (AniList.at(i)->state() == QPropertyAnimation::Running)
               SomeAniRunning = true;
 
-      qApp->processEvents();
-      QThread::msleep(1);
+      if (SomeAniRunning)
+      {
+          qApp->processEvents();
+          QThread::msleep(1);
+      }
+      else
+          break;
 
-  }  while(SomeAniRunning);
+  }
 
   for ( int i = 0; i < AniList.size(); i++)
       delete AniList.at(i);
@@ -698,10 +710,12 @@ QPropertyAnimation* AnimatePropertyDelay(QObject * const Target, const QByteArra
 
     ani->setEndValue(Value);
 
-    QObject::connect(ani, &QPropertyAnimation::finished, [=](){
-        if (DeleteWhenStopped)
-                delete ani;
-    });
+//    QObject::connect(ani, &QPropertyAnimation::finished, [=](){
+//        if (DeleteWhenStopped)
+//                delete ani;
+//    });
+    if (DeleteWhenStopped)
+        QObject::connect(ani, &QPropertyAnimation::finished, ani, &QPropertyAnimation::deleteLater);
 
 
     if (Delay_ms == 0)
@@ -799,8 +813,8 @@ void TGradientAnimation::Start()
 }
 
 
-void TForm15Puzzle::on_ChangeBackground_clicked()
-{
+//void TForm15Puzzle::on_ChangeBackground_clicked()
+//{
 //  TGradientAnimation *GradientAni = ( TGradientAnimation* )ui->Tile1->property("GradientAni").toUInt() ;
 
 //    GradientAni->StopColor1 = QColor("olive");;
@@ -809,4 +823,28 @@ void TForm15Puzzle::on_ChangeBackground_clicked()
 //    GradientAni->Duration_ms = 500;
 //    GradientAni->AutoReverse = true;
 //    GradientAni->Start();
+//}
+
+
+
+void TForm15Puzzle::on_ButtonScaleForAndroid_clicked()
+{
+    QFont font = qApp->font();
+    font.setPointSize(12);
+    qApp->setFont(font);
+
+    int ButtonSize =  ui->PanelClient->width() / 8;
+
+    ui->Button3x3->setMaximumSize(ButtonSize, 16777215);
+    ui->Button4x4->setMaximumSize(ButtonSize, 16777215);
+    ui->Button5x5->setMaximumSize(ButtonSize, 16777215);
+
+    ui->TextTime->setMinimumSize(ButtonSize * 1.3, 16777215);
+
+    font = ui->TextTime->font();
+    font.setPointSize(17);
+    ui->TextTime->setFont(font);
+
+
 }
+

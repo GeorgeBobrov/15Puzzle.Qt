@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>425</width>
+    <width>374</width>
     <height>490</height>
    </rect>
   </property>
@@ -203,7 +203,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="3,2,4,4,4">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
       <property name="spacing">
        <number>6</number>
       </property>
@@ -239,6 +239,16 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
       <item>
        <widget class="QPushButton" name="ButtonPuzzleMatched">
         <property name="minimumSize">
@@ -331,9 +341,6 @@ background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgb
   <tabstop>Button5x5</tabstop>
   <tabstop>ButtonDisappeare</tabstop>
   <tabstop>ButtonPlace</tabstop>
-  <tabstop>ButtonPuzzleMatched</tabstop>
-  <tabstop>ButtonTimeRunningOut</tabstop>
-  <tabstop>ButtonTimeOver</tabstop>
   <tabstop>Tile1</tabstop>
  </tabstops>
  <resources/>

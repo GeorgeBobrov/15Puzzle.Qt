@@ -56,7 +56,8 @@ private slots:
     void on_ButtonTimeRunningOut_clicked();
     void on_ButtonTimeOver_clicked();
 
-    void on_ChangeBackground_clicked();
+
+    void on_ButtonScaleForAndroid_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -110,6 +111,8 @@ public:
 
     int TimeRemaining;
 
+
+    // QWidget interface
 };
 
 QPropertyAnimation* AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
