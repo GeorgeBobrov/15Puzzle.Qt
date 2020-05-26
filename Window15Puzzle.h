@@ -13,7 +13,7 @@
 #include <QTimeLine>
 #include <QCloseEvent>
 #include <QList>
-
+#include <QtDebug>
 
 
 QT_BEGIN_NAMESPACE
@@ -40,9 +40,9 @@ private slots:
 
     void on_ButtonShuffle_clicked();
 
+    void TimerResizeTimer();
     void TimerCreateTilesTimer();
     void TimerTimeTimer();
-    void TimerResizeTimer();
 //    void PanelClientResize();
 //    void ButtonMenuClick();
 
@@ -78,6 +78,7 @@ public:
     int SpaceX, SpaceY;
     QColor TileFillNormalColor1, TileFillNormalColor2;
     QDateTime LastResizeTime;
+    QDateTime LastTapTime;
     bool ClosingAnimation;
     bool GreenTiles;
 
@@ -95,10 +96,12 @@ public:
     void AnimatePuzzleMatched( );
     void AnimateTimeOver( );
     void AnimateNormalizeTilesColor( );
+    void ShowDebug( );
+    void on_PanelClient_clicked();
 //    void StartBlinkShuffle( );
 //    void StopBlinkShuffle( );
 
-    void resizeEvent(QResizeEvent* event);
+//    void resizeEvent(QResizeEvent* event);
     void closeEvent (QCloseEvent *event);
 
     inline int  ind( int Row, int Col );
@@ -110,9 +113,10 @@ public:
     QTimer *TimerResize;
 
     int TimeRemaining;
+    int PanelDebugMaximumHeight;
+    int ResizeCount = 0;
 
 
-    // QWidget interface
 };
 
 QPropertyAnimation* AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
@@ -148,5 +152,15 @@ public:
 
 };
 
+class TMyEventFilter : public QObject
+{
+    Q_OBJECT
+public:
+    TMyEventFilter(TForm15Puzzle *aparent) : QObject() {parent = aparent;};
+    ~TMyEventFilter() = default;
+protected:
+    TForm15Puzzle *parent;
+    bool eventFilter(QObject *obj, QEvent *event);
+};
 
 #endif // MAINWINDOW_H
