@@ -124,14 +124,21 @@ QPropertyAnimation* AnimatePropertyDelay(QObject* const Target, const QByteArray
                   QEasingCurve AInterpolation = QEasingCurve::Linear,
                   bool DeleteWhenStopped = true, bool WaitAnimationEnd = false);
 
+
+using TGenerateStyleSheetFunc = QString (*)(const QColor &color1, const QColor &color2);
+
 class TGradientAnimation
 {
 public:
-    TGradientAnimation(QWidget *ATarget);
+	TGradientAnimation(QWidget *ATarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc);
     ~TGradientAnimation();
+	void SetCurColors(QColor ACurColor1, QColor ACurColor2);
+	void Stop();
+	void Start();
 
     QWidget *Target;
     QTimeLine *timeLine;
+	TGenerateStyleSheetFunc GenerateStyleSheetFunc;
 
     QColor StartColor1;
     QColor StartColor2;
@@ -146,9 +153,6 @@ public:
     double Duration_ms = 1000;
     QEasingCurve AInterpolation = QEasingCurve::Linear;
     bool AutoReverse;
-    bool FirstStart = true;
-    void Stop();
-    void Start();
 
 };
 

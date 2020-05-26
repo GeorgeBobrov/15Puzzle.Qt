@@ -7,14 +7,13 @@ const double MinMoveAniDuration = 1;
 
 
 
-QString GenerateStyleSheet(const QColor &color1, const QColor &color2)
+QString GenerateTileStyleSheet(const QColor &color1, const QColor &color2)
 {
 	return QString("border: 4px solid #FFE55555;\n"
 	"border-radius: 4px;\n"
 	"background-color: qlineargradient(spread:pad, x1:0.35, y1:0.35, x2:0.9, y2:0.9, "
 	"stop:0 ") + color1.name() + ", stop:1 " + color2.name() + ");";
 }
-
 
 
 TForm15Puzzle::TForm15Puzzle(QWidget *parent)
@@ -140,15 +139,11 @@ void	TForm15Puzzle::CreateTiles( )
 
 			NewTile->setText(QString::number(i + 1));
 
-
-			TGradientAnimation *GradientAni = new TGradientAnimation(NewTile);
+			TGradientAnimation *GradientAni = new TGradientAnimation(NewTile, GenerateTileStyleSheet);
 			NewTile->setProperty("GradientAni", qVariantFromValue((void*) GradientAni) );
 
-			NewTile->setStyleSheet(GenerateStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
-			GradientAni->StartColor1 = TileFillNormalColor1;
-			GradientAni->StartColor2 = TileFillNormalColor2;
-			GradientAni->FirstStart = true;
-
+			NewTile->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
+			GradientAni->SetCurColors(TileFillNormalColor1, TileFillNormalColor2);
 
 			NewTile->setParent(ui->PanelClient);
 //			NewTile.SendToBack;
@@ -556,7 +551,7 @@ void  TForm15Puzzle::AnimatePrepareBeforePlace( )
 
 
 			Tiles[i]->setGeometry(geometry);
-			Tiles[i]->setStyleSheet(GenerateStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
+			Tiles[i]->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
 			Tiles[i]->show();
     }
 }
@@ -722,9 +717,10 @@ QColor InterpolateColor(const QColor &Start, const QColor &Stop, double T)
 
 
 
-TGradientAnimation::TGradientAnimation(QWidget *ATarget)
+TGradientAnimation::TGradientAnimation(QWidget *ATarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc)
 {
 	Target = ATarget;
+	GenerateStyleSheetFunc = AGenerateStyleSheetFunc;
 	timeLine = new QTimeLine(Duration_ms, Target);
   
 	int FrameRange = 1023;
@@ -743,7 +739,8 @@ TGradientAnimation::TGradientAnimation(QWidget *ATarget)
   
 		CurColor1 = InterpolateColor(StartColor1, StopColor1, NormalizedTime);
 		CurColor2 = InterpolateColor(StartColor2, StopColor2, NormalizedTime);
-		Target->setStyleSheet(GenerateStyleSheet(CurColor1, CurColor2));
+
+		Target->setStyleSheet(GenerateStyleSheetFunc(CurColor1, CurColor2));
 	});
 }
 
@@ -759,17 +756,18 @@ void TGradientAnimation::Stop()
 	timeLine->stop();
 }
 
+void TGradientAnimation::SetCurColors(QColor ACurColor1, QColor ACurColor2)
+{
+	CurColor1 = ACurColor1;
+	CurColor2 = ACurColor2;
+}
+
 void TGradientAnimation::Start()
 {
 	timeLine->setEasingCurve(AInterpolation);
 
-	if (FirstStart)
-		FirstStart = false;
-	else
-	{
-		StartColor1 = CurColor1;
-		StartColor2 = CurColor2;
-	}
+	StartColor1 = CurColor1;
+	StartColor2 = CurColor2;
 
 	if (AutoReverse)
 		timeLine->setDuration(Duration_ms * 2);
