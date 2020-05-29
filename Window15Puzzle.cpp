@@ -86,7 +86,7 @@ void TForm15Puzzle::on_Button5x5_clicked()
 
 
 
-void  TForm15Puzzle::SetBase( const int Value )
+void TForm15Puzzle::SetBase( const int Value )
 {
 	if ( Value == Base )
 	{
@@ -103,7 +103,7 @@ void  TForm15Puzzle::SetBase( const int Value )
 
 
 
-void  TForm15Puzzle::TimerCreateTilesTimer( )
+void TForm15Puzzle::TimerCreateTilesTimer( )
 {
 #ifdef Q_OS_ANDROID
 	on_ButtonScaleForAndroid_clicked();
@@ -116,7 +116,7 @@ void  TForm15Puzzle::TimerCreateTilesTimer( )
 
 
 
-void	TForm15Puzzle::CreateTiles( )
+void TForm15Puzzle::CreateTiles( )
 {
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )
@@ -155,7 +155,7 @@ void	TForm15Puzzle::CreateTiles( )
 }
 
 
-int  TForm15Puzzle::ind( int Row, int Col )
+int TForm15Puzzle::ind( int Row, int Col )
 {
 	return Row * Base + Col;
 }
@@ -175,7 +175,7 @@ int TForm15Puzzle::ActualPosition(TTile ATile)
 }
 
 
-void  TForm15Puzzle::on_Tile1_pressed( )
+void TForm15Puzzle::on_Tile1_pressed( )
 {
 	TTile SenderTile = (TTile) QObject::sender();
 	if ( Mode == JustShuffled )
@@ -186,7 +186,7 @@ void  TForm15Puzzle::on_Tile1_pressed( )
 }
 
 
-bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd )
+bool TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd )
 {
 	bool WasMoved = false;
 	
@@ -197,24 +197,16 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool 
 		if ( Tiles[ind( Row, ColPressed )] == NULL )
 		{
 			int RowNoTile = Row;
-			if ( RowNoTile > RowPressed )
+			if ( RowNoTile > RowPressed ) //Move tiles down
 				for ( int RowToMove = RowNoTile - 1; RowToMove >= RowPressed; RowToMove--)
 				{
-					int NewPosition = ind( RowToMove + 1, ColPressed );
-					Tiles[NewPosition] = Tiles[ind( RowToMove, ColPressed )];
-//					Tiles[NewPosition].Tag = NewPosition;
-					Tiles[ind( RowToMove, ColPressed )] = NULL;
-					AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
+					MoveTile(ind( RowToMove, ColPressed ), ind( RowToMove + 1, ColPressed ), MoveAniDuration, WaitAnimationEnd);
 					WasMoved = true;
 				}
-			if ( RowPressed > RowNoTile )
+			if ( RowPressed > RowNoTile ) //Move tiles up
 				for ( int RowToMove = RowNoTile + 1; RowToMove <= RowPressed; RowToMove++)
 				{
-					int NewPosition = ind( RowToMove - 1, ColPressed );
-					Tiles[NewPosition] = Tiles[ind( RowToMove, ColPressed )];
-//					Tiles[NewPosition].Tag = NewPosition;
-					Tiles[ind( RowToMove, ColPressed )] = NULL;
-					AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
+					MoveTile(ind( RowToMove, ColPressed ), ind( RowToMove - 1, ColPressed ), MoveAniDuration, WaitAnimationEnd);
 					WasMoved = true;
 				}
 		}
@@ -223,24 +215,16 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool 
 			if ( Tiles[ind( RowPressed, Col )] == NULL )
 			{
 				int ColNoTile = Col;
-				if ( ColNoTile > ColPressed )
+				if ( ColNoTile > ColPressed ) //Move tiles right
 					for ( int ColToMove = ColNoTile - 1; ColToMove >= ColPressed; ColToMove--)
 					{
-						int NewPosition = ind( RowPressed, ColToMove + 1 );
-						Tiles[NewPosition] = Tiles[ind( RowPressed, ColToMove )];
-//						Tiles[NewPosition].Tag = NewPosition;
-						Tiles[ind( RowPressed, ColToMove )] = NULL;
-						AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
+						MoveTile(ind( RowPressed, ColToMove ), ind( RowPressed, ColToMove + 1 ), MoveAniDuration, WaitAnimationEnd);
 						WasMoved = true;
 					}
-				if ( ColPressed > ColNoTile )
+				if ( ColPressed > ColNoTile ) //Move tiles left
 					for ( int ColToMove = ColNoTile + 1; ColToMove <= ColPressed; ColToMove++)
 					{
-						int NewPosition = ind( RowPressed, ColToMove - 1 );
-						Tiles[NewPosition] = Tiles[ind( RowPressed, ColToMove )];
-//						Tiles[NewPosition].Tag = NewPosition;
-						Tiles[ind( RowPressed, ColToMove )] = NULL;
-						AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
+						MoveTile(ind( RowPressed, ColToMove ), ind( RowPressed, ColToMove - 1 ), MoveAniDuration, WaitAnimationEnd);
 						WasMoved = true;
 					}
 			}
@@ -248,8 +232,15 @@ bool  TForm15Puzzle::TryMoveTile( int TilePosition, float MoveAniDuration, bool 
 	return WasMoved;
 }
 
+void TForm15Puzzle::MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd )
+{
+	Tiles[NewPosition] = Tiles[OldPosition];
+	Tiles[OldPosition] = NULL;
+	AnimateMoveTile( Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd );
+};
 
-void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd )
+
+void TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd )
 {
 	uint16_t NewRow = 0, NewCol = 0;
 	DivMod( ActualPosition(ATile), Base, NewRow, NewCol );
@@ -274,7 +265,7 @@ void  TForm15Puzzle::AnimateMoveTile( TTile ATile, float MoveAniDuration, bool W
 }
 
 
-void  TForm15Puzzle::CheckPuzzleMatched( )
+void TForm15Puzzle::CheckPuzzleMatched( )
 {
 	bool LPuzzleMatched = true;
 	for ( uint i = 0; i < Tiles.size(); i++)
@@ -356,7 +347,7 @@ void TForm15Puzzle::TimerTimeTimer()
 }
 
 
-void	TForm15Puzzle::SetMaxTime( )
+void TForm15Puzzle::SetMaxTime( )
 {
 	uint16_t Sec = 0, Min = 0;
 	TimeRemaining = ( ( Base * Base * Base * Base ) / 20 ) * 10;
@@ -392,7 +383,6 @@ void TForm15Puzzle::TimerResizeTimer()
 
 void TForm15Puzzle::closeEvent(QCloseEvent *event)
 {
-	qDebug() << QString("closeEvent  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 	if ( ! ClosingAnimation )
 	{
 		AnimateTilesDisappeare();
@@ -403,7 +393,7 @@ void TForm15Puzzle::closeEvent(QCloseEvent *event)
 
 //-------------------------------   Animations   -----------------------------
 
-void	TForm15Puzzle::CalcConsts( )
+void TForm15Puzzle::CalcConsts( )
 {
 	int Height = ui->PanelClient->height();
 	int Width = ui->PanelClient->width();
@@ -427,7 +417,7 @@ void	TForm15Puzzle::CalcConsts( )
 }
 
 
-void	TForm15Puzzle::AnimatePlaceTilesFast( )
+void TForm15Puzzle::AnimatePlaceTilesFast( )
 {
 	CalcConsts();
 //	for (TRectangle CurTile : Tiles)
@@ -453,10 +443,12 @@ void	TForm15Puzzle::AnimatePlaceTilesFast( )
 		}
 }
 
-void	TForm15Puzzle::AnimateTilesDisappeare( )
+void TForm15Puzzle::AnimateTilesDisappeare( )
 {
+	qDebug() << QString("AnimateTilesDisappeare  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 	QList<QPropertyAnimation*> AniList;
 
+	int TileIndex = 0; // First Tile can be NULL, and then all animations will have delay and Wait end of all animations fails
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )
 		{
@@ -467,16 +459,17 @@ void	TForm15Puzzle::AnimateTilesDisappeare( )
 
 			geometry.setRect(X, Y, 0, 0);
 
-			auto ani = AnimatePropertyDelay(Tiles[i], "geometry", geometry, 400, ( 0 + 30 * i ),
+			auto ani = AnimatePropertyDelay(Tiles[i], "geometry", geometry, 400, ( 0 + 30 * TileIndex ),
 																			QEasingCurve::/*OutExpo*/InBack, false );
+			TileIndex++;
 
 			AniList.append(ani);
-    }
+		}
 
 //Wait end of all animations;
-  bool SomeAniRunning;
-  while(true)
-  {
+	bool SomeAniRunning;
+	while(true)
+	{
 		SomeAniRunning = false;
 		for ( int i = 0; i < AniList.size(); i++)
 			if (AniList.at(i)->state() == QPropertyAnimation::Running)
@@ -498,7 +491,7 @@ void	TForm15Puzzle::AnimateTilesDisappeare( )
 }
 
 
-void  TForm15Puzzle::AnimateBaseNotChanged( )
+void TForm15Puzzle::AnimateBaseNotChanged( )
 {
 //  int i = 0;
 //  for ( int stop = Tiles.Length - 1, i = 0; i <= stop; i++)
@@ -530,13 +523,13 @@ void  TForm15Puzzle::AnimateBaseNotChanged( )
 
 
 
-void  TForm15Puzzle::AnimatePrepareBeforePlace( )
+void TForm15Puzzle::AnimatePrepareBeforePlace( )
 {
-  CalcConsts();
+	CalcConsts();
 
-  for ( uint i = 0; i < Tiles.size(); i++)
-    if ( Tiles[i] != NULL )
-    {
+	for ( uint i = 0; i < Tiles.size(); i++)
+		if ( Tiles[i] != NULL )
+		{
 			uint16_t Row = 0, Col = 0;
 			DivMod( i, Base, Row, Col );
 
@@ -553,13 +546,13 @@ void  TForm15Puzzle::AnimatePrepareBeforePlace( )
 			Tiles[i]->setGeometry(geometry);
 			Tiles[i]->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
 			Tiles[i]->show();
-    }
+		}
 }
 
 
 
 
-void  TForm15Puzzle::AnimateTimeRunningOut( )
+void TForm15Puzzle::AnimateTimeRunningOut( )
 {
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )
@@ -575,7 +568,7 @@ void  TForm15Puzzle::AnimateTimeRunningOut( )
 }
 
 
-void	TForm15Puzzle::AnimateTimeOver( )
+void TForm15Puzzle::AnimateTimeOver( )
 {
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )
@@ -592,7 +585,7 @@ void	TForm15Puzzle::AnimateTimeOver( )
 }
 
 
-void	TForm15Puzzle::AnimateNormalizeTilesColor( )
+void TForm15Puzzle::AnimateNormalizeTilesColor( )
 {
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )
@@ -610,7 +603,7 @@ void	TForm15Puzzle::AnimateNormalizeTilesColor( )
 
 
 
-void	TForm15Puzzle::AnimatePuzzleMatched( )
+void TForm15Puzzle::AnimatePuzzleMatched( )
 {
 	for ( uint i = 0; i < Tiles.size(); i++)
 		if ( Tiles[i] != NULL )

@@ -29,92 +29,93 @@ using TTile = QPushButton*;
 
 class TForm15Puzzle : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    TForm15Puzzle(QWidget *parent = nullptr);
-    ~TForm15Puzzle();
+	TForm15Puzzle(QWidget *parent = nullptr);
+	~TForm15Puzzle();
 
 private slots:
-    void on_Tile1_pressed();
+	void on_Tile1_pressed();
 
-    void on_ButtonShuffle_clicked();
+	void on_ButtonShuffle_clicked();
 
-    void TimerResizeTimer();
-    void TimerCreateTilesTimer();
-    void TimerTimeTimer();
-//    void PanelClientResize();
-//    void ButtonMenuClick();
+	void TimerResizeTimer();
+	void TimerCreateTilesTimer();
+	void TimerTimeTimer();
+//	void PanelClientResize();
+//	void ButtonMenuClick();
 
-    void on_Button3x3_clicked();
-    void on_Button4x4_clicked();
-    void on_Button5x5_clicked();
+	void on_Button3x3_clicked();
+	void on_Button4x4_clicked();
+	void on_Button5x5_clicked();
 
-    void on_ButtonPlace_clicked();
-    void on_ButtonDisappeare_clicked();
-    void on_ButtonPuzzleMatched_clicked();
-    void on_ButtonTimeRunningOut_clicked();
-    void on_ButtonTimeOver_clicked();
+	void on_ButtonPlace_clicked();
+	void on_ButtonDisappeare_clicked();
+	void on_ButtonPuzzleMatched_clicked();
+	void on_ButtonTimeRunningOut_clicked();
+	void on_ButtonTimeOver_clicked();
 
 
-    void on_ButtonScaleForAndroid_clicked();
+	void on_ButtonScaleForAndroid_clicked();
 
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow *ui;
 
 
 public:
-      /* Public declarations */
-    int Base;
-    TMode Mode;
-    void SetMode( const TMode Value );
-    void SetMaxTime( );
-    void SetBase( const int Value );
+	  /* Public declarations */
+	int Base;
+	TMode Mode;
+	void SetMode( const TMode Value );
+	void SetMaxTime( );
+	void SetBase( const int Value );
 
-    void CreateTiles( );
-    std::vector< TTile > Tiles;
-    int TileSize;
-    int TileSpacing;
-    int SpaceX, SpaceY;
-    QColor TileFillNormalColor1, TileFillNormalColor2;
-    QDateTime LastResizeTime;
-    QDateTime LastTapTime;
-    bool ClosingAnimation;
-    bool GreenTiles;
+	void CreateTiles( );
+	std::vector< TTile > Tiles;
+	int TileSize;
+	int TileSpacing;
+	int SpaceX, SpaceY;
+	QColor TileFillNormalColor1, TileFillNormalColor2;
+	QDateTime LastResizeTime;
+	QDateTime LastTapTime;
+	 bool ClosingAnimation = false;
+	bool GreenTiles;
 
-    void TileMouseDown();
-    bool TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd );
-    void AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd );
-    bool CheckCanPuzzleMatch( );
-    void CheckPuzzleMatched( );
-    void CalcConsts( );
-    void AnimatePlaceTilesFast( );
-    void AnimateTilesDisappeare( );
-    void AnimatePrepareBeforePlace( );
-    void AnimateBaseNotChanged( );
-    void AnimateTimeRunningOut( );
-    void AnimatePuzzleMatched( );
-    void AnimateTimeOver( );
-    void AnimateNormalizeTilesColor( );
-    void ShowDebug( );
-    void on_PanelClient_clicked();
-//    void StartBlinkShuffle( );
-//    void StopBlinkShuffle( );
+	void TileMouseDown();
+	bool TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd );
+	 void MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd );
+	void AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd );
+	bool CheckCanPuzzleMatch( );
+	void CheckPuzzleMatched( );
+	void CalcConsts( );
+	void AnimatePlaceTilesFast( );
+	void AnimateTilesDisappeare( );
+	void AnimatePrepareBeforePlace( );
+	void AnimateBaseNotChanged( );
+	void AnimateTimeRunningOut( );
+	void AnimatePuzzleMatched( );
+	void AnimateTimeOver( );
+	void AnimateNormalizeTilesColor( );
+	void ShowDebug( );
+	void on_PanelClient_clicked();
+//	void StartBlinkShuffle( );
+//	void StopBlinkShuffle( );
 
-//    void resizeEvent(QResizeEvent* event);
-    void closeEvent (QCloseEvent *event);
+//	void resizeEvent(QResizeEvent* event);
+	void closeEvent (QCloseEvent *event);
 
-    inline int  ind( int Row, int Col );
-    int ActualPosition(TTile ATile);
-    void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
+	inline int  ind( int Row, int Col );
+	int ActualPosition(TTile ATile);
+	void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
 
 
-    QTimer *TimerTime;
-    QTimer *TimerResize;
+	QTimer *TimerTime;
+	QTimer *TimerResize;
 
-    int TimeRemaining;
-    int PanelDebugMaximumHeight;
-    int ResizeCount = 0;
+	int TimeRemaining;
+	int PanelDebugMaximumHeight;
+	int ResizeCount = 0;
 
 
 };
