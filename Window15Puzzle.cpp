@@ -425,61 +425,60 @@ void TForm15Puzzle::CalcConsts()
 void TForm15Puzzle::AnimatePlaceTilesFast()
 {
 	CalcConsts();
-//	for (TRectangle CurTile : Tiles)
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
+			TTile Tile = Tiles[i];
 			uint16_t Row = 0, Col = 0;
 			DivMod(i, Base, Row, Col);
 
-			QRect geometry = Tiles[i]->geometry();
+			QRect geometry = Tile->geometry();
 			int X = SpaceX + round(Col * (TileSize + TileSpacing));
 			int Y = SpaceY + round(Row * (TileSize + TileSpacing));
 
 			geometry.setRect(X, Y, TileSize, TileSize);
 
+			AnimatePropertyDelay(Tile, "geometry", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
 
-			AnimatePropertyDelay(Tiles[i], "geometry", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
-
-//			AnimatePropertyDelay(Tiles[i]->font(), "pixelSize", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
+//			AnimatePropertyDelay(Tile->font(), "pixelSize", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
 
 			int FontSize = round(TileSize / 3.0);
 #ifdef Q_OS_ANDROID
 			FontSize = round(TileSize / 4.0);
 #endif
-			QFont font = Tiles[i]->font();
+			QFont font = Tile->font();
 			font.setPointSize(FontSize);
-			Tiles[i]->setFont(font);
+			Tile->setFont(font);
 
 			TileBorderThickness = round(TileSize / 16.0);
 
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
-			Tiles[i]->setStyleSheet(GenerateTileStyleSheet(GradientAni->CurColor1, GradientAni->CurColor2));
-
+			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
+			Tile->setStyleSheet(GenerateTileStyleSheet(GradientAni->CurColor1, GradientAni->CurColor2));
 		}
 }
 
+
 void TForm15Puzzle::AnimateTilesDisappeare()
 {
-	qDebug() << QString("AnimateTilesDisappeare  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
+//	qDebug() << QString("AnimateTilesDisappeare  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 	QList<QPropertyAnimation*> AniList;
 
-	int TileIndex = 0; // First Tile can be NULL, and then all animations will have delay and Wait end of all animations fails
+	int TileIndex = 0; // Index from not NULL, because Tiles[0] can be NULL, and then all animations will have delay and Wait end of all animations fails
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-			QRect geometry = Tiles[i]->geometry();
+			TTile Tile = Tiles[i];
+			QRect geometry = Tile->geometry();
 
 			int X = geometry.x()  + round(double(TileSize) / 2);
 			int Y = geometry.y() + TileSize;
 
 			geometry.setRect(X, Y, 0, 0);
 
-			auto ani = AnimatePropertyDelay(Tiles[i], "geometry", geometry, 400, (0 + 30 * TileIndex),
-																			QEasingCurve::/*OutExpo*/InBack, false);
-			TileIndex++;
+			auto ani = AnimatePropertyDelay(Tile, "geometry", geometry, 400, (0 + 30 * TileIndex), QEasingCurve::InBack, false);
 
 			AniList.append(ani);
+			TileIndex++;
 		}
 
 //Wait end of all animations;
@@ -520,7 +519,8 @@ void TForm15Puzzle::AnimateBaseNotChanged()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-			QRect OrigGeometry = Tiles[i]->geometry();
+			TTile Tile = Tiles[i];
+			QRect OrigGeometry = Tile->geometry();
 			QRect geometry = OrigGeometry;
 
 			int offset = round(double(TileSize) / 4);
@@ -530,9 +530,8 @@ void TForm15Puzzle::AnimateBaseNotChanged()
 			int Y = geometry.y() + offset;
 
 			geometry.setRect(X, Y, size, size);
-			AnimatePropertyDelay(Tiles[i], "geometry", geometry, 300, (0 + 30 * i), QEasingCurve::InBack);
-
-			AnimatePropertyDelay(Tiles[i], "geometry", OrigGeometry, 300, (350 + 30 * i), QEasingCurve::OutBack);
+			AnimatePropertyDelay(Tile, "geometry", geometry, 300, (0 + 30 * i), QEasingCurve::InBack);
+			AnimatePropertyDelay(Tile, "geometry", OrigGeometry, 300, (350 + 30 * i), QEasingCurve::OutBack);
 		}
 
 }
@@ -546,10 +545,11 @@ void TForm15Puzzle::AnimatePrepareBeforePlace()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
+			TTile Tile = Tiles[i];
 			uint16_t Row = 0, Col = 0;
 			DivMod(i, Base, Row, Col);
 
-			QRect geometry = Tiles[i]->geometry();
+			QRect geometry = Tile->geometry();
 			int X = SpaceX + round(Col * (TileSize + TileSpacing));
 			int Y = SpaceY + round(Row * (TileSize + TileSpacing));
 
@@ -559,9 +559,9 @@ void TForm15Puzzle::AnimatePrepareBeforePlace()
 			geometry.setRect(X, Y, 0, 0);
 
 
-			Tiles[i]->setGeometry(geometry);
-			Tiles[i]->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
-			Tiles[i]->show();
+			Tile->setGeometry(geometry);
+			Tile->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
+			Tile->show();
 		}
 }
 
@@ -573,7 +573,8 @@ void TForm15Puzzle::AnimateTimeRunningOut()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
+			TTile Tile = Tiles[i];
+			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
 			GradientAni->StopColor1 = TileFillNormalColor1;
 			GradientAni->StopColor2 = QColor("darkorange");
 			GradientAni->Delay_ms = 0;
@@ -589,7 +590,8 @@ void TForm15Puzzle::AnimateTimeOver()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
+			TTile Tile = Tiles[i];
+			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
 			GradientAni->Stop();
 			GradientAni->StopColor1 = Qt::gray;
 			GradientAni->StopColor2 = Qt::red;
@@ -606,7 +608,8 @@ void TForm15Puzzle::AnimateNormalizeTilesColor()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
+			TTile Tile = Tiles[i];
+			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
 			GradientAni->StopColor1 = TileFillNormalColor1;
 			GradientAni->StopColor2 = TileFillNormalColor2;
 			GradientAni->Delay_ms = 0;
@@ -624,8 +627,9 @@ void TForm15Puzzle::AnimatePuzzleMatched()
 	for (uint i = 0; i < Tiles.size(); i++)
 		if (Tiles[i] != NULL)
 		{
-//			TAnimator.AnimateFloatDelay(Tiles[i], "RotationAngle", 360, 1 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
+			TTile Tile = Tiles[i];
+//			TAnimator.AnimateFloatDelay(Tile, "RotationAngle", 360, 1 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
+			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
 			GradientAni->Stop();
 			GradientAni->StopColor1 = QColor("lawngreen");
 			GradientAni->StopColor2 = QColor("gold");
@@ -640,11 +644,7 @@ void TForm15Puzzle::AnimatePuzzleMatched()
 
 void TForm15Puzzle::on_ButtonPlace_clicked()
 {
-	if (GreenTiles)
-	{
-		AnimateNormalizeTilesColor();
-		GreenTiles = false;
-	}
+	AnimateNormalizeTilesColor();
 	AnimatePlaceTilesFast();
 }
 
@@ -658,8 +658,6 @@ void TForm15Puzzle::on_ButtonDisappeare_clicked()
 void TForm15Puzzle::on_ButtonPuzzleMatched_clicked()
 {
 	AnimatePuzzleMatched();
-	GreenTiles = true;
-
 }
 
 void TForm15Puzzle::on_ButtonTimeRunningOut_clicked()
@@ -794,7 +792,7 @@ void TGradientAnimation::Start()
 
 //void TForm15Puzzle::on_ChangeBackground_clicked()
 //{
-//TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
+//TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
 
 //	GradientAni->StopColor1 = QColor("olive");;
 //	GradientAni->StopColor2 = QColor("darkorange");

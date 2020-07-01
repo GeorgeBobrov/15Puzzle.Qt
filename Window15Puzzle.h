@@ -67,11 +67,11 @@ public:
 	  /* Public declarations */
 	int Base;
 	TMode Mode;
-	void SetMode( const TMode Value );
-	void SetMaxTime( );
-	void SetBase( const int Value );
+	void SetMode(const TMode Value);
+	void SetMaxTime();
+	void SetBase(const int Value);
 
-	void CreateTiles( );
+	void CreateTiles();
 	std::vector< TTile > Tiles;
 	int TileSize;
 	int TileSpacing;
@@ -79,33 +79,32 @@ public:
 	QColor TileFillNormalColor1, TileFillNormalColor2;
 	QDateTime LastResizeTime;
 	QDateTime LastTapTime;
-	 bool ClosingAnimation = false;
-	bool GreenTiles;
+	bool ClosingAnimation = false;
 
 	void TileMouseDown();
-	bool TryMoveTile( int TilePosition, float MoveAniDuration, bool WaitAnimationEnd );
-	 void MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd );
-	void AnimateMoveTile( TTile ATile, float MoveAniDuration, bool WaitAnimationEnd );
-	bool CheckCanPuzzleMatch( );
-	void CheckPuzzleMatched( );
-	void CalcConsts( );
-	void AnimatePlaceTilesFast( );
-	void AnimateTilesDisappeare( );
-	void AnimatePrepareBeforePlace( );
-	void AnimateBaseNotChanged( );
-	void AnimateTimeRunningOut( );
-	void AnimatePuzzleMatched( );
-	void AnimateTimeOver( );
-	void AnimateNormalizeTilesColor( );
-	void ShowDebug( );
+	bool TryMoveTile(int TilePosition, float MoveAniDuration, bool WaitAnimationEnd);
+	void MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd);
+	void AnimateMoveTile(TTile ATile, float MoveAniDuration, bool WaitAnimationEnd);
+	bool CheckCanPuzzleMatch();
+	void CheckPuzzleMatched();
+	void CalcConsts();
+	void AnimatePlaceTilesFast();
+	void AnimateTilesDisappeare();
+	void AnimatePrepareBeforePlace();
+	void AnimateBaseNotChanged();
+	void AnimateTimeRunningOut();
+	void AnimatePuzzleMatched();
+	void AnimateTimeOver();
+	void AnimateNormalizeTilesColor();
+	void ShowDebug();
 	void on_PanelClient_clicked();
-//	void StartBlinkShuffle( );
-//	void StopBlinkShuffle( );
+//	void StartBlinkShuffle();
+//	void StopBlinkShuffle();
 
 //	void resizeEvent(QResizeEvent* event);
 	void closeEvent (QCloseEvent *event);
 
-	inline int  ind( int Row, int Col );
+	inline int  ind(int Row, int Col);
 	int ActualPosition(TTile ATile);
 	void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
 
