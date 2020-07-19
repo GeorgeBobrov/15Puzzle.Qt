@@ -20,44 +20,44 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-enum TMode {Game,
+enum class Mode {Game,
             GameOver,
             JustShuffled,
             PuzzleMatched };
 
-using TTile = QPushButton*;
+using Tile = QPushButton*;
 
-class TForm15Puzzle : public QMainWindow
+class Form15Puzzle : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	TForm15Puzzle(QWidget *parent = nullptr);
-	~TForm15Puzzle();
+	Form15Puzzle(QWidget *parent = nullptr);
+	~Form15Puzzle();
 
 private slots:
-	void on_Tile1_pressed();
+	void on_tile1_pressed();
 
-	void on_ButtonShuffle_clicked();
+	void on_buttonShuffle_clicked();
 
-	void TimerResizeTimer();
-	void TimerCreateTilesTimer();
-	void TimerTimeTimer();
-//	void PanelClientResize();
-//	void ButtonMenuClick();
+	void timerResizeTimer();
+	void timerCreateTilesTimer();
+	void timerTimeTimer();
+//	void panelClientResize();
+//	void buttonMenuClick();
 
-	void on_Button3x3_clicked();
-	void on_Button4x4_clicked();
-	void on_Button5x5_clicked();
+	void on_button3x3_clicked();
+	void on_button4x4_clicked();
+	void on_button5x5_clicked();
 
-	void on_ButtonPlace_clicked();
-	void on_ButtonDisappeare_clicked();
-	void on_ButtonPuzzleMatched_clicked();
-	void on_ButtonTimeRunningOut_clicked();
-	void on_ButtonTimeOver_clicked();
+	void on_buttonPlace_clicked();
+	void on_buttonDisappeare_clicked();
+	void on_buttonPuzzleMatched_clicked();
+	void on_buttonTimeRunningOut_clicked();
+	void on_buttonTimeOver_clicked();
 
 
-	void on_ButtonScaleForAndroid_clicked();
+	void on_buttonScaleForAndroid_clicked();
 
 private:
 	Ui::MainWindow *ui;
@@ -65,105 +65,103 @@ private:
 
 public:
 	  /* Public declarations */
-	int Base;
-	TMode Mode;
-	void SetMode(const TMode Value);
-	void SetMaxTime();
-	void SetBase(const int Value);
+	int base;
+	Mode mode;
+	void setMode(const Mode value);
+	void setMaxTime();
+	void setBase(const int value);
 
-	void CreateTiles();
-	std::vector< TTile > Tiles;
-	int TileSize;
-	int TileSpacing;
-	int SpaceX, SpaceY;
-	QColor TileFillNormalColor1, TileFillNormalColor2;
-	QDateTime LastResizeTime;
-	QDateTime LastTapTime;
-	bool ClosingAnimation = false;
+	void createTiles();
+	std::vector< Tile > tiles;
+	int tileSize;
+	int tileSpacing;
+	int spaceX, spaceY;
+	QColor tileFillNormalColor1, tileFillNormalColor2;
+	QDateTime lastResizeTime;
+	QDateTime lastTapTime;
+	bool closingAnimation = false;
 
-	void TileMouseDown();
-	bool TryMoveTile(int TilePosition, float MoveAniDuration, bool WaitAnimationEnd);
-	void MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd);
-	void AnimateMoveTile(TTile ATile, float MoveAniDuration, bool WaitAnimationEnd);
-	bool CheckCanPuzzleMatch();
-	void CheckPuzzleMatched();
-	void CalcConsts();
-	void AnimatePlaceTilesFast();
-	void AnimateTilesDisappeare();
-	void AnimatePrepareBeforePlace();
-	void AnimateBaseNotChanged();
-	void AnimateTimeRunningOut();
-	void AnimatePuzzleMatched();
-	void AnimateTimeOver();
-	void AnimateNormalizeTilesColor();
-	void ShowDebug();
-	void on_PanelClient_clicked();
-//	void StartBlinkShuffle();
-//	void StopBlinkShuffle();
+	void tileMouseDown();
+	bool tryMoveTile(int tilePosition, float moveAniDuration, bool waitAnimationEnd);
+	void moveTile(int oldPosition, int newPosition, float moveAniDuration, bool waitAnimationEnd);
+	void animateMoveTile(Tile tile, float moveAniDuration, bool waitAnimationEnd);
+	bool checkCanPuzzleMatch();
+	void checkPuzzleMatched();
+	void calcConsts();
+	void animatePlaceTilesFast();
+	void animateTilesDisappeare();
+	void animatePrepareBeforePlace();
+	void animateBaseNotChanged();
+	void animateTimeRunningOut();
+	void animatePuzzleMatched();
+	void animateTimeOver();
+	void animateNormalizeTilesColor();
+	void showDebug();
+	void on_panelClient_clicked();
+//	void startBlinkShuffle();
+//	void stopBlinkShuffle();
 
 //	void resizeEvent(QResizeEvent* event);
 	void closeEvent (QCloseEvent *event);
 
-	inline int  ind(int Row, int Col);
-	int ActualPosition(TTile ATile);
-	void DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder);
+	inline int  ind(int row, int col);
+	int actualPosition(Tile tile);
 
+	QTimer *timerTime;
+	QTimer *timerResize;
 
-	QTimer *TimerTime;
-	QTimer *TimerResize;
-
-	int TimeRemaining;
-	int PanelDebugMaximumHeight;
-	int ResizeCount = 0;
+	int timeRemaining;
+	int panelDebugMaximumHeight;
+	int resizeCount = 0;
 
 
 };
 
-QPropertyAnimation* AnimatePropertyDelay(QObject* const Target, const QByteArray &PropertyName,
-                  const QVariant &Value, uint Duration_ms = 200, uint Delay_ms = 0,
-                  QEasingCurve AInterpolation = QEasingCurve::Linear,
-                  bool DeleteWhenStopped = true, bool WaitAnimationEnd = false);
+QPropertyAnimation* animatePropertyDelay(QObject* const target, const QByteArray &propertyName,
+                  const QVariant &value, uint duration_ms = 200, uint delay_ms = 0,
+                  QEasingCurve interpolation = QEasingCurve::Linear,
+                  bool deleteWhenStopped = true, bool waitAnimationEnd = false);
 
 
 using TGenerateStyleSheetFunc = QString (*)(const QColor &color1, const QColor &color2);
 
-class TGradientAnimation
+class GradientAnimation
 {
 public:
-	TGradientAnimation(QWidget *ATarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc);
-    ~TGradientAnimation();
-	void SetCurColors(QColor ACurColor1, QColor ACurColor2);
-	void Stop();
-	void Start();
+	GradientAnimation(QWidget *aTarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc);
+    ~GradientAnimation();
+	void setCurColors(QColor aCurColor1, QColor aCurColor2);
+	void stop();
+	void start();
 
-    QWidget *Target;
+    QWidget *target;
     QTimeLine *timeLine;
-	TGenerateStyleSheetFunc GenerateStyleSheetFunc;
+	TGenerateStyleSheetFunc generateStyleSheetFunc;
 
-    QColor StartColor1;
-    QColor StartColor2;
+    QColor startColor1;
+    QColor startColor2;
 
-    QColor StopColor1;
-    QColor StopColor2;
+    QColor stopColor1;
+    QColor stopColor2;
 
-    QColor CurColor1;
-    QColor CurColor2;
+    QColor curColor1;
+    QColor curColor2;
 
-    double Delay_ms = 0;
-    double Duration_ms = 1000;
-    QEasingCurve AInterpolation = QEasingCurve::Linear;
-    bool AutoReverse;
+    double delay_ms = 0;
+    double duration_ms = 1000;
+    QEasingCurve interpolation = QEasingCurve::Linear;
+    bool autoReverse;
 
 };
 
-class TMyEventFilter : public QObject
+class MyEventFilter : public QObject
 {
     Q_OBJECT
 public:
-    TMyEventFilter(TForm15Puzzle *aparent) : QObject() {parent = aparent;};
-    ~TMyEventFilter() = default;
+    MyEventFilter(Form15Puzzle *aparent) : QObject() {parent = aparent;};
+    ~MyEventFilter() = default;
 protected:
-    TForm15Puzzle *parent;
+    Form15Puzzle *parent;
     bool eventFilter(QObject *obj, QEvent *event);
 };
 

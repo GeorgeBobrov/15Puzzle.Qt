@@ -5,7 +5,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    TForm15Puzzle w;
+	 Form15Puzzle w;
     w.show();
     return a.exec();
 }

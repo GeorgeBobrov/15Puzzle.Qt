@@ -34,7 +34,7 @@
      <number>0</number>
     </property>
     <item>
-     <layout class="QHBoxLayout" name="PanelTop" stretch="0,0,0,0,0">
+     <layout class="QHBoxLayout" name="panelTop" stretch="0,0,0,0,0">
       <property name="leftMargin">
        <number>8</number>
       </property>
@@ -50,7 +50,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QLabel" name="TextTime">
+         <widget class="QLabel" name="textTime">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -117,7 +117,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="ButtonShuffle">
+       <widget class="QPushButton" name="buttonShuffle">
         <property name="text">
          <string>Shuffle</string>
         </property>
@@ -148,7 +148,7 @@
          <enum>QLayout::SetFixedSize</enum>
         </property>
         <item>
-         <widget class="QPushButton" name="Button3x3">
+         <widget class="QPushButton" name="button3x3">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
             <horstretch>2</horstretch>
@@ -167,7 +167,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="Button4x4">
+         <widget class="QPushButton" name="button4x4">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>1</horstretch>
@@ -186,7 +186,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="Button5x5">
+         <widget class="QPushButton" name="button5x5">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
             <horstretch>2</horstretch>
@@ -209,7 +209,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QFrame" name="PanelDebug">
+     <widget class="QFrame" name="panelDebug">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -262,7 +262,7 @@
           <number>8</number>
          </property>
          <item>
-          <widget class="QPushButton" name="ButtonDisappeare">
+          <widget class="QPushButton" name="buttonDisappeare">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -281,7 +281,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="ButtonPlace">
+          <widget class="QPushButton" name="buttonPlace">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -313,7 +313,7 @@
           <number>8</number>
          </property>
          <item>
-          <widget class="QPushButton" name="ButtonPuzzleMatched">
+          <widget class="QPushButton" name="buttonPuzzleMatched">
            <property name="minimumSize">
             <size>
              <width>40</width>
@@ -326,7 +326,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="ButtonTimeRunningOut">
+          <widget class="QPushButton" name="buttonTimeRunningOut">
            <property name="minimumSize">
             <size>
              <width>40</width>
@@ -339,7 +339,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="ButtonTimeOver">
+          <widget class="QPushButton" name="buttonTimeOver">
            <property name="minimumSize">
             <size>
              <width>40</width>
@@ -357,7 +357,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="PanelClient">
+     <widget class="QGroupBox" name="panelClient">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -376,12 +376,12 @@
   </widget>
  </widget>
  <tabstops>
-  <tabstop>ButtonShuffle</tabstop>
-  <tabstop>Button3x3</tabstop>
-  <tabstop>Button4x4</tabstop>
-  <tabstop>Button5x5</tabstop>
-  <tabstop>ButtonDisappeare</tabstop>
-  <tabstop>ButtonPlace</tabstop>
+  <tabstop>buttonShuffle</tabstop>
+  <tabstop>button3x3</tabstop>
+  <tabstop>button4x4</tabstop>
+  <tabstop>button5x5</tabstop>
+  <tabstop>buttonDisappeare</tabstop>
+  <tabstop>buttonPlace</tabstop>
  </tabstops>
  <resources/>
  <connections/>

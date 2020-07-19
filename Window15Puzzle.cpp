@@ -2,495 +2,493 @@
 #include "ui_Window15Puzzle.h"
 
 
-const double MaxMoveAniDuration = 150;
-const double MinMoveAniDuration = 1;
+const double maxMoveAniDuration = 150;
+const double minMoveAniDuration = 1;
 
-int TileBorderThickness = 4;
+int tileBorderThickness = 4;
 
-QString GenerateTileStyleSheet(const QColor &color1, const QColor &color2)
+QString generateTileStyleSheet(const QColor &color1, const QColor &color2)
 {
-	return QString("border: " + QString::number(TileBorderThickness) + "px solid #FFE55555;\n"
-	"border-radius: " + QString::number(TileBorderThickness) + "px;\n"
+	return QString("border: " + QString::number(tileBorderThickness) + "px solid #FFE55555;\n"
+	"border-radius: " + QString::number(tileBorderThickness) + "px;\n"
 	"background-color: qlineargradient(spread:pad, x1:0.35, y1:0.35, x2:0.9, y2:0.9, "
 	"stop:0 ") + color1.name() + ", stop:1 " + color2.name() + ");";
 }
 
 
-TForm15Puzzle::TForm15Puzzle(QWidget *parent)
+Form15Puzzle::Form15Puzzle(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
 
-	TMyEventFilter *MyEventFilter = new TMyEventFilter(this);
-	ui->PanelClient->installEventFilter(MyEventFilter);
+	MyEventFilter *myEventFilter = new MyEventFilter(this);
+	ui->panelClient->installEventFilter(myEventFilter);
 
-	TimerTime = new QTimer();
-	connect(TimerTime, SIGNAL(timeout()), this, SLOT(TimerTimeTimer()));
-	TimerTime->setInterval(1000);
+	timerTime = new QTimer();
+	connect(timerTime, SIGNAL(timeout()), this, SLOT(timerTimeTimer()));
+	timerTime->setInterval(1000);
 
-	TimerResize = new QTimer();
-	connect(TimerResize, SIGNAL(timeout()), this, SLOT(TimerResizeTimer()));
-	TimerResize->setInterval(200);
+	timerResize = new QTimer();
+	connect(timerResize, SIGNAL(timeout()), this, SLOT(timerResizeTimer()));
+	timerResize->setInterval(200);
 
-	LastResizeTime = QDateTime::currentDateTime();   //To prevent resize on start on Android
+	lastResizeTime = QDateTime::currentDateTime();   //To prevent resize on start on Android
 //	qDebug() << QString("FormCreate  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 
-	TileFillNormalColor1 = QColor("bisque");
-	TileFillNormalColor2 = QColor("#FFABE024");
+	tileFillNormalColor1 = QColor("bisque");
+	tileFillNormalColor2 = QColor("#FFABE024");
 
-//  PanelClient  background-color: rgb(244, 244, 244);
+//  panelClient  background-color: rgb(244, 244, 244);
 
 	srand(unsigned(time(0)));
-	SetBase(4);
+	setBase(4);
 
-	PanelDebugMaximumHeight = ui->PanelDebug->height();
-//	ui->PanelDebug->setMaximumHeight(0);
+	panelDebugMaximumHeight = ui->panelDebug->height();
+//	ui->panelDebug->setMaximumHeight(0);
 
-	ui->PanelDebug->setVisible(false);
+	ui->panelDebug->setVisible(false);
 }
 
-TForm15Puzzle::~TForm15Puzzle()
+Form15Puzzle::~Form15Puzzle()
 {
 	delete ui;
 }
 
 
-void  TForm15Puzzle::SetMode(const TMode Value)
+void  Form15Puzzle::setMode(const Mode value)
 {
-	Mode = Value;
-	if (Mode == Game)
-		TimerTime->start();
+	mode = value;
+	if (mode == Mode::Game)
+		timerTime->start();
 	else
-		TimerTime->stop();
+		timerTime->stop();
 }
 
 
 
-void TForm15Puzzle::on_Button3x3_clicked()
+void Form15Puzzle::on_button3x3_clicked()
 {
-	QPushButton* Sender = (QPushButton*)QObject::sender();
-	int LBase = QString(Sender->text().at(0)).toInt();
-	SetBase(LBase);
+	QPushButton* sender = (QPushButton*)QObject::sender();
+	int LBase = QString(sender->text().at(0)).toInt();
+	setBase(LBase);
 }
 
-void TForm15Puzzle::on_Button4x4_clicked()
+void Form15Puzzle::on_button4x4_clicked()
 {
-	on_Button3x3_clicked();
+	on_button3x3_clicked();
 }
 
-void TForm15Puzzle::on_Button5x5_clicked()
+void Form15Puzzle::on_button5x5_clicked()
 {
-	on_Button3x3_clicked();
+	on_button3x3_clicked();
 }
 
 
 
-void TForm15Puzzle::SetBase(const int Value)
+void Form15Puzzle::setBase(const int value)
 {
-	if (Value == Base)
+	if (value == base)
 	{
-		AnimateBaseNotChanged();
+		animateBaseNotChanged();
 		return;
 	}
-	SetMode(GameOver);
-	AnimateTilesDisappeare();
-	Base = Value;
-	SetMaxTime();
+	setMode(Mode::GameOver);
+	animateTilesDisappeare();
+	base = value;
+	setMaxTime();
 
-	QTimer::singleShot(100, this, SLOT(TimerCreateTilesTimer()));
+	QTimer::singleShot(100, this, SLOT(timerCreateTilesTimer()));
 }
 
 
 
-void TForm15Puzzle::TimerCreateTilesTimer()
+void Form15Puzzle::timerCreateTilesTimer()
 {
 #ifdef Q_OS_ANDROID
-	on_ButtonScaleForAndroid_clicked();
+	on_buttonScaleForAndroid_clicked();
 #endif
 
-	CreateTiles();
-	AnimatePrepareBeforePlace();
-	AnimatePlaceTilesFast();
+	createTiles();
+	animatePrepareBeforePlace();
+	animatePlaceTilesFast();
 }
 
 
 
-void TForm15Puzzle::CreateTiles()
+void Form15Puzzle::createTiles()
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tiles[i]->property("GradientAni").value<void *>() ;
-			delete GradientAni;
-			delete Tiles[i];
-			Tiles[i] = NULL;
+			GradientAnimation *gradientAni = (GradientAnimation*)tiles[i]->property("gradientAni").value<void *>() ;
+			delete gradientAni;
+			delete tiles[i];
+			tiles[i] = NULL;
 		}
 
-	Tiles.resize(Base * Base);
-	for (uint i = 0; i < Tiles.size() - 1; i++)
-		if (Tiles[i] == NULL)
+	tiles.resize(base * base);
+	for (uint i = 0; i < tiles.size() - 1; i++)
+		if (tiles[i] == NULL)
 		{
-			TTile NewTile;
+			Tile newTile;
 
-			NewTile = new QPushButton(this);
+			newTile = new QPushButton(this);
 
-			connect(NewTile, SIGNAL(pressed()), this, SLOT(on_Tile1_pressed()));
+			connect(newTile, SIGNAL(pressed()), this, SLOT(on_tile1_pressed()));
 
-			NewTile->setText(QString::number(i + 1));
+			newTile->setText(QString::number(i + 1));
 
-			TGradientAnimation *GradientAni = new TGradientAnimation(NewTile, GenerateTileStyleSheet);
-			NewTile->setProperty("GradientAni", qVariantFromValue((void*) GradientAni));
+			GradientAnimation *gradientAni = new GradientAnimation(newTile, generateTileStyleSheet);
+			newTile->setProperty("gradientAni", qVariantFromValue((void*) gradientAni));
 
-			NewTile->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
-			GradientAni->SetCurColors(TileFillNormalColor1, TileFillNormalColor2);
+			newTile->setStyleSheet(generateTileStyleSheet(tileFillNormalColor1, tileFillNormalColor2));
+			gradientAni->setCurColors(tileFillNormalColor1, tileFillNormalColor2);
 
-			NewTile->setParent(ui->PanelClient);
-//			NewTile.SendToBack;
-			Tiles[i] = NewTile;
+			newTile->setParent(ui->panelClient);
+//			newTile.SendToBack;
+			tiles[i] = newTile;
 		}
 
-	if (Tiles[Tiles.size() - 1] != NULL)
-		Tiles[Tiles.size() - 1] = NULL;
+	if (tiles[tiles.size() - 1] != NULL)
+		tiles[tiles.size() - 1] = NULL;
 }
 
 
-int TForm15Puzzle::ind(int Row, int Col)
+int Form15Puzzle::ind(int row, int col)
 {
-	return Row * Base + Col;
+	return row * base + col;
 }
 
-void TForm15Puzzle::DivMod(int Dividend, uint16_t Divisor, uint16_t &Result, uint16_t &Remainder)
-{
-	Result = Dividend / Divisor;
-	Remainder = Dividend % Divisor;
-}
 
-int TForm15Puzzle::ActualPosition(TTile ATile)
+int Form15Puzzle::actualPosition(Tile tile)
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] == ATile)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] == tile)
 			return i;
 	return 0;
 }
 
 
-void TForm15Puzzle::on_Tile1_pressed()
+void Form15Puzzle::on_tile1_pressed()
 {
-	TTile SenderTile = (TTile) QObject::sender();
-	if (Mode == JustShuffled)
-		SetMode(Game);
-	bool WasMoved = TryMoveTile(ActualPosition(SenderTile), MaxMoveAniDuration, false);
-	if (WasMoved)
-		CheckPuzzleMatched();
+	Tile senderTile = (Tile) QObject::sender();
+	if (mode == Mode::JustShuffled)
+		setMode(Mode::Game);
+	bool wasMoved = tryMoveTile(actualPosition(senderTile), maxMoveAniDuration, false);
+	if (wasMoved)
+		checkPuzzleMatched();
 }
 
 
-bool TForm15Puzzle::TryMoveTile(int TilePosition, float MoveAniDuration, bool WaitAnimationEnd)
+bool Form15Puzzle::tryMoveTile(int tilePosition, float moveAniDuration, bool waitAnimationEnd)
 {
-	bool WasMoved = false;
+	bool wasMoved = false;
 	
-	uint16_t RowPressed = 0, ColPressed = 0;
-	DivMod(TilePosition, Base, RowPressed, ColPressed);
+	int colPressed = tilePosition % base;
+	int rowPressed = tilePosition / base;
 
-	for (int Row = 0; Row < Base; Row++)
-		if (Tiles[ind(Row, ColPressed)] == NULL)
+	for (int row = 0; row < base; row++)
+		if (tiles[ind(row, colPressed)] == NULL)
 		{
-			int RowNoTile = Row;
-			if (RowNoTile > RowPressed) //Move tiles down
-				for (int RowToMove = RowNoTile - 1; RowToMove >= RowPressed; RowToMove--)
+			int rowNoTile = row;
+			if (rowNoTile > rowPressed) //Move tiles down
+				for (int rowToMove = rowNoTile - 1; rowToMove >= rowPressed; rowToMove--)
 				{
-					MoveTile(ind(RowToMove, ColPressed), ind(RowToMove + 1, ColPressed), MoveAniDuration, WaitAnimationEnd);
-					WasMoved = true;
+					moveTile(ind(rowToMove, colPressed), ind(rowToMove + 1, colPressed), moveAniDuration, waitAnimationEnd);
+					wasMoved = true;
 				}
-			if (RowPressed > RowNoTile) //Move tiles up
-				for (int RowToMove = RowNoTile + 1; RowToMove <= RowPressed; RowToMove++)
+			if (rowPressed > rowNoTile) //Move tiles up
+				for (int rowToMove = rowNoTile + 1; rowToMove <= rowPressed; rowToMove++)
 				{
-					MoveTile(ind(RowToMove, ColPressed), ind(RowToMove - 1, ColPressed), MoveAniDuration, WaitAnimationEnd);
-					WasMoved = true;
+					moveTile(ind(rowToMove, colPressed), ind(rowToMove - 1, colPressed), moveAniDuration, waitAnimationEnd);
+					wasMoved = true;
 				}
 		}
-	if (! WasMoved)
-		for (int Col = 0; Col < Base; Col++)
-			if (Tiles[ind(RowPressed, Col)] == NULL)
+	if (! wasMoved)
+		for (int col = 0; col < base; col++)
+			if (tiles[ind(rowPressed, col)] == NULL)
 			{
-				int ColNoTile = Col;
-				if (ColNoTile > ColPressed) //Move tiles right
-					for (int ColToMove = ColNoTile - 1; ColToMove >= ColPressed; ColToMove--)
+				int colNoTile = col;
+				if (colNoTile > colPressed) //Move tiles right
+					for (int colToMove = colNoTile - 1; colToMove >= colPressed; colToMove--)
 					{
-						MoveTile(ind(RowPressed, ColToMove), ind(RowPressed, ColToMove + 1), MoveAniDuration, WaitAnimationEnd);
-						WasMoved = true;
+						moveTile(ind(rowPressed, colToMove), ind(rowPressed, colToMove + 1), moveAniDuration, waitAnimationEnd);
+						wasMoved = true;
 					}
-				if (ColPressed > ColNoTile) //Move tiles left
-					for (int ColToMove = ColNoTile + 1; ColToMove <= ColPressed; ColToMove++)
+				if (colPressed > colNoTile) //Move tiles left
+					for (int colToMove = colNoTile + 1; colToMove <= colPressed; colToMove++)
 					{
-						MoveTile(ind(RowPressed, ColToMove), ind(RowPressed, ColToMove - 1), MoveAniDuration, WaitAnimationEnd);
-						WasMoved = true;
+						moveTile(ind(rowPressed, colToMove), ind(rowPressed, colToMove - 1), moveAniDuration, waitAnimationEnd);
+						wasMoved = true;
 					}
 			}
 
-	return WasMoved;
+	return wasMoved;
 }
 
-void TForm15Puzzle::MoveTile(int OldPosition, int NewPosition, float MoveAniDuration, bool WaitAnimationEnd)
+void Form15Puzzle::moveTile(int oldPosition, int newPosition, float moveAniDuration, bool waitAnimationEnd)
 {
-	TTile temp = Tiles[NewPosition];
-	Tiles[NewPosition] = Tiles[OldPosition];
-	Tiles[OldPosition] = temp;
+	Tile temp = tiles[newPosition];
+	tiles[newPosition] = tiles[oldPosition];
+	tiles[oldPosition] = temp;
 
-	AnimateMoveTile(Tiles[NewPosition], MoveAniDuration, WaitAnimationEnd);
+	animateMoveTile(tiles[newPosition], moveAniDuration, waitAnimationEnd);
 };
 
 
-void TForm15Puzzle::AnimateMoveTile(TTile ATile, float MoveAniDuration, bool WaitAnimationEnd)
+void Form15Puzzle::animateMoveTile(Tile tile, float moveAniDuration, bool waitAnimationEnd)
 {
-	uint16_t NewRow = 0, NewCol = 0;
-	DivMod(ActualPosition(ATile), Base, NewRow, NewCol);
+	int ActPos = actualPosition(tile);
+	int newCol = ActPos % base;
+	int newRow = ActPos / base;
 
-	QRect geometry = ATile->geometry();
-	int X = SpaceX + round(NewCol * (TileSize + TileSpacing));
-	int Y = SpaceY + round(NewRow * (TileSize + TileSpacing));
+	QRect geometry = tile->geometry();
+	int x = spaceX + round(newCol * (tileSize + tileSpacing));
+	int y = spaceY + round(newRow * (tileSize + tileSpacing));
 
-	geometry.setRect(X, Y, TileSize, TileSize);
+	geometry.setRect(x, y, tileSize, tileSize);
 
 
-	if (MoveAniDuration > 0)
+	if (moveAniDuration > 0)
 	{
-		AnimatePropertyDelay(ATile, "geometry", geometry, MoveAniDuration, 0, QEasingCurve::OutExpo, true, WaitAnimationEnd);
+		animatePropertyDelay(tile, "geometry", geometry, moveAniDuration, 0, QEasingCurve::OutExpo, true, waitAnimationEnd);
 	}
 	else
 	{
-//		ATile.Position.X = X;
-//		ATile.Position.Y = Y;
-		ATile->setGeometry(geometry);
+//		tile.Position.X = X;
+//		tile.Position.Y = Y;
+		tile->setGeometry(geometry);
 	}
 }
 
 
-void TForm15Puzzle::CheckPuzzleMatched()
+void Form15Puzzle::checkPuzzleMatched()
 {
-	bool LPuzzleMatched = true;
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	bool puzzleMatched = true;
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			int TextNumber = Tiles[i]->text().toInt();
+			int TextNumber = tiles[i]->text().toInt();
 
-			if ((TextNumber - 1) != ActualPosition(Tiles[i]))
+			if ((TextNumber - 1) != actualPosition(tiles[i]))
 			{
-				LPuzzleMatched = false;
+				puzzleMatched = false;
 				break;
 			}
 		}
 
-	if (LPuzzleMatched && (Mode == Game))
+	if (puzzleMatched && (mode == Mode::Game))
 	{
-		SetMode(PuzzleMatched);
-		AnimatePuzzleMatched();
+		setMode(Mode::PuzzleMatched);
+		animatePuzzleMatched();
 	}
-	if ((! LPuzzleMatched) && ((Mode == PuzzleMatched) || (Mode == JustShuffled)))
+	if ((! puzzleMatched) && ((mode == Mode::PuzzleMatched) || (mode == Mode::JustShuffled)))
 	{
-		AnimateNormalizeTilesColor();
-		if (Mode == PuzzleMatched)
-			SetMode(GameOver);
+		animateNormalizeTilesColor();
+		if (mode == Mode::PuzzleMatched)
+			setMode(Mode::GameOver);
 	}
 }
 
 
 
-void TForm15Puzzle::on_ButtonShuffle_clicked()
+void Form15Puzzle::on_buttonShuffle_clicked()
 {
-	AnimateNormalizeTilesColor();
+	animateNormalizeTilesColor();
 
-	int NewI = 0;
-	int MoveCount = Tiles.size() * Tiles.size();
-	float MoveAniDuration = MaxMoveAniDuration;
-	for (int i = 1; i <= MoveCount; i++)
+	int newI = 0;
+	int moveCount = tiles.size() * tiles.size();
+	float moveAniDuration = maxMoveAniDuration;
+	for (int i = 1; i <= moveCount; i++)
 	{
 		if (i <= 10)
-			MoveAniDuration = MinMoveAniDuration + (MaxMoveAniDuration * (1 - (double(i) / 10)));
-		if (i >= MoveCount - 10)
-			MoveAniDuration = MinMoveAniDuration + ((MaxMoveAniDuration / 2) * (1 - (double((MoveCount - i)) / 10)));
-		if ((i > 20) && (i < MoveCount - 20))
+			moveAniDuration = minMoveAniDuration + (maxMoveAniDuration * (1 - (double(i) / 10)));
+		if (i >= moveCount - 10)
+			moveAniDuration = minMoveAniDuration + ((maxMoveAniDuration / 2) * (1 - (double((moveCount - i)) / 10)));
+		if ((i > 20) && (i < moveCount - 20))
 			if ((i % 10) == 0)
-				MoveAniDuration = MinMoveAniDuration;
+				moveAniDuration = minMoveAniDuration;
 			else
-				MoveAniDuration = 0;
+				moveAniDuration = 0;
 
-		bool WasMoved;
+		bool wasMoved;
 		do
 		{
-			NewI = rand() % Tiles.size();
-			WasMoved =  TryMoveTile(NewI, MoveAniDuration, /*WaitAnimationEnd*/true);
+			newI = rand() % tiles.size();
+			wasMoved =  tryMoveTile(newI, moveAniDuration, /*waitAnimationEnd*/true);
 		}
-		while (! WasMoved);
+		while (! wasMoved);
 	}
-	SetMaxTime();
-//  StopBlinkShuffle();
+	setMaxTime();
+//  stopBlinkShuffle();
 
-	SetMode(JustShuffled);
-	CheckPuzzleMatched();
+	setMode(Mode::JustShuffled);
+	checkPuzzleMatched();
 }
 
 
-void TForm15Puzzle::TimerTimeTimer()
+void Form15Puzzle::timerTimeTimer()
 {
-	uint16_t Min = 0, Sec = 0;
-	TimeRemaining = TimeRemaining - 1;
-	DivMod(TimeRemaining, 60, Min, Sec);
-	ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
+	timeRemaining = timeRemaining - 1;
 
-	if (TimeRemaining == 0)
+	int sec = timeRemaining % 60;
+	int min = timeRemaining / 60;
+
+	ui->textTime->setText(QString("%1:%2").arg(min).arg(sec, 2, 10, QLatin1Char('0')));
+
+	if (timeRemaining == 0)
 	{
-		SetMode(GameOver);
-		AnimateTimeOver();
-//		StartBlinkShuffle();
+		setMode(Mode::GameOver);
+		animateTimeOver();
+//		startBlinkShuffle();
 		return;
 	}
-	if (TimeRemaining <= 10)
-		AnimateTimeRunningOut();
+	if (timeRemaining <= 10)
+		animateTimeRunningOut();
 
 }
 
 
-void TForm15Puzzle::SetMaxTime()
+void Form15Puzzle::setMaxTime()
 {
-	uint16_t Sec = 0, Min = 0;
-	TimeRemaining = ((Base * Base * Base * Base) / 20) * 10;
-	DivMod(TimeRemaining, 60, Min, Sec);
-	ui->TextTime->setText(QString("%1:%2").arg(Min).arg(Sec, 2, 10, QLatin1Char('0')));
+	timeRemaining = ((base * base * base * base) / 20) * 10;
+	int sec = timeRemaining % 60;
+	int min = timeRemaining / 60;
+	ui->textTime->setText(QString("%1:%2").arg(min).arg(sec, 2, 10, QLatin1Char('0')));
 }
 
-// resizeEvent was realized for PanelClient
-//void TForm15Puzzle::resizeEvent(QResizeEvent *event)
+// resizeEvent was realized for panelClient
+//void Form15Puzzle::resizeEvent(QResizeEvent *event)
 //{
 //		QMainWindow::resizeEvent(event);
-//		TimerResize->stop();
-//		TimerResize->start();
+//		timerResize->stop();
+//		timerResize->start();
 //}
 
 
 
-void TForm15Puzzle::TimerResizeTimer()
+void Form15Puzzle::timerResizeTimer()
 {
-	TimerResize->stop();
-	uint TimeFromLastResize_ms = LastResizeTime.msecsTo(QDateTime::currentDateTime());
+	timerResize->stop();
+	uint timeFromLastResize_ms = lastResizeTime.msecsTo(QDateTime::currentDateTime());
 
-//	qDebug() << QString("TimerResizeTimer	") << QDateTime::currentDateTime().toString("mm:ss:zzz");
+//	qDebug() << QString("timerResizeTimer	") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 
-	if (TimeFromLastResize_ms > 1000)
+	if (timeFromLastResize_ms > 1000)
 	{
-//			qDebug() << QString("AnimatePlaceTilesFast	") << TimeFromLastResize_ms;
-		AnimatePlaceTilesFast();
-		LastResizeTime = QDateTime::currentDateTime();
+//			qDebug() << QString("AnimatePlaceTilesFast	") << timeFromLastResize_ms;
+		animatePlaceTilesFast();
+		lastResizeTime = QDateTime::currentDateTime();
 	}
 
 }
 
-void TForm15Puzzle::closeEvent(QCloseEvent *event)
+void Form15Puzzle::closeEvent(QCloseEvent *event)
 {
-	if (! ClosingAnimation)
+	if (! closingAnimation)
 	{
-		AnimateTilesDisappeare();
-		ClosingAnimation = true;
+		animateTilesDisappeare();
+		closingAnimation = true;
 	}
 
 }
 
 //-------------------------------   Animations   -----------------------------
 
-void TForm15Puzzle::CalcConsts()
+void Form15Puzzle::calcConsts()
 {
-	int Height = ui->PanelClient->height();
-	int Width = ui->PanelClient->width();
+	int height = ui->panelClient->height();
+	int width = ui->panelClient->width();
 
-	if (Height > Width)
+	if (height > width)
 	{
-		SpaceX = round(double(Width) / 20);
-		TileSize = round(double((Width - SpaceX * 2)) / Base);
-		SpaceY = SpaceX + round(double((Height - Width)) / 2);
+		spaceX = round(double(width) / 20);
+		tileSize = round(double((width - spaceX * 2)) / base);
+		spaceY = spaceX + round(double((height - width)) / 2);
 	}
 	else
 	{
-		SpaceY = round(double(Height) / 20);
-		TileSize = round(double((Height - SpaceY * 2)) / Base);
-		SpaceX = SpaceY + round(double((Width - Height)) / 2);
+		spaceY = round(double(height) / 20);
+		tileSize = round(double((height - spaceY * 2)) / base);
+		spaceX = spaceY + round(double((width - height)) / 2);
 	}
-	TileSpacing = round(TileSize * 0.06);
-	TileSize = round(TileSize * 0.94);
-	SpaceX = SpaceX + round(double(TileSpacing) / 2);
-	SpaceY = SpaceY + round(double(TileSpacing) / 2);
+	tileSpacing = round(tileSize * 0.06);
+	tileSize = round(tileSize * 0.94);
+	spaceX = spaceX + round(double(tileSpacing) / 2);
+	spaceY = spaceY + round(double(tileSpacing) / 2);
 }
 
 
-void TForm15Puzzle::AnimatePlaceTilesFast()
+void Form15Puzzle::animatePlaceTilesFast()
 {
-	CalcConsts();
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	calcConsts();
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			uint16_t Row = 0, Col = 0;
-			DivMod(i, Base, Row, Col);
+			Tile tile = tiles[i];
+			int col = i % base;
+			int row = i / base;
 
-			QRect geometry = Tile->geometry();
-			int X = SpaceX + round(Col * (TileSize + TileSpacing));
-			int Y = SpaceY + round(Row * (TileSize + TileSpacing));
+			QRect geometry = tile->geometry();
+			int x = spaceX + round(col * (tileSize + tileSpacing));
+			int y = spaceY + round(row * (tileSize + tileSpacing));
 
-			geometry.setRect(X, Y, TileSize, TileSize);
+			geometry.setRect(x, y, tileSize, tileSize);
 
-			AnimatePropertyDelay(Tile, "geometry", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
+			animatePropertyDelay(tile, "geometry", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
 
-//			AnimatePropertyDelay(Tile->font(), "pixelSize", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
+//			animatePropertyDelay(tile->font(), "pixelSize", geometry, 200, (0 + 30 * i), QEasingCurve::OutExpo);
 
-			int FontSize = round(TileSize / 3.0);
+			int fontSize = round(tileSize / 3.0);
 #ifdef Q_OS_ANDROID
-			FontSize = round(TileSize / 4.0);
+			fontSize = round(tileSize / 4.0);
 #endif
-			QFont font = Tile->font();
-			font.setPointSize(FontSize);
-			Tile->setFont(font);
+			QFont font = tile->font();
+			font.setPointSize(fontSize);
+			tile->setFont(font);
 
-			TileBorderThickness = round(TileSize / 16.0);
+			tileBorderThickness = round(tileSize / 16.0);
 
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
-			Tile->setStyleSheet(GenerateTileStyleSheet(GradientAni->CurColor1, GradientAni->CurColor2));
+			GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
+			tile->setStyleSheet(generateTileStyleSheet(gradientAni->curColor1, gradientAni->curColor2));
 		}
 }
 
 
-void TForm15Puzzle::AnimateTilesDisappeare()
+void Form15Puzzle::animateTilesDisappeare()
 {
 //	qDebug() << QString("AnimateTilesDisappeare  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
-	QList<QPropertyAnimation*> AniList;
+	QList<QPropertyAnimation*> aniList;
 
-	int TileIndex = 0; // Index from not NULL, because Tiles[0] can be NULL, and then all animations will have delay and Wait end of all animations fails
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	int tileIndex = 0; // Index from not NULL, because tiles[0] can be NULL, and then all animations will have delay and Wait end of all animations fails
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			QRect geometry = Tile->geometry();
+			Tile tile = tiles[i];
+			QRect geometry = tile->geometry();
 
-			int X = geometry.x()  + round(double(TileSize) / 2);
-			int Y = geometry.y() + TileSize;
+			int x = geometry.x()  + round(double(tileSize) / 2);
+			int y = geometry.y() + tileSize;
 
-			geometry.setRect(X, Y, 0, 0);
+			geometry.setRect(x, y, 0, 0);
 
-			auto ani = AnimatePropertyDelay(Tile, "geometry", geometry, 400, (0 + 30 * TileIndex), QEasingCurve::InBack, false);
+			auto ani = animatePropertyDelay(tile, "geometry", geometry, 400, (0 + 30 * tileIndex), QEasingCurve::InBack, false);
 
-			AniList.append(ani);
-			TileIndex++;
+			aniList.append(ani);
+			tileIndex++;
 		}
 
 //Wait end of all animations;
-	bool SomeAniRunning;
+	bool someAniRunning;
 	while(true)
 	{
-		SomeAniRunning = false;
-		for (int i = 0; i < AniList.size(); i++)
-			if (AniList.at(i)->state() == QPropertyAnimation::Running)
-				SomeAniRunning = true;
+		someAniRunning = false;
+		for (int i = 0; i < aniList.size(); i++)
+			if (aniList.at(i)->state() == QPropertyAnimation::Running)
+				someAniRunning = true;
 
-		if (SomeAniRunning)
+		if (someAniRunning)
 		{
 			qApp->processEvents();
 			QThread::msleep(1);
@@ -500,206 +498,206 @@ void TForm15Puzzle::AnimateTilesDisappeare()
 
 	}
 
-  for (int i = 0; i < AniList.size(); i++)
-		delete AniList.at(i);
+  for (int i = 0; i < aniList.size(); i++)
+		delete aniList.at(i);
 
 }
 
 
-void TForm15Puzzle::AnimateBaseNotChanged()
+void Form15Puzzle::animateBaseNotChanged()
 {
 //  int i = 0;
-//  for (int stop = Tiles.Length - 1, i = 0; i <= stop; i++)
-//    if (Tiles[i] != NULL)
+//  for (int stop = tiles.Length - 1, i = 0; i <= stop; i++)
+//    if (tiles[i] != NULL)
 //    {
-//      TAnimator.AnimateFloatDelay(Tiles[i], "RotationAngle", - 20, 0.1 * slowdown, 0 * slowdown, TAnimationType.InOut, TInterpolationType.Linear);
-//      TAnimator.AnimateFloatDelay(Tiles[i], "RotationAngle", 20, 0.25 * slowdown, 0.1 * slowdown, TAnimationType.InOut, TInterpolationType.Exponential);
-//      TAnimator.AnimateFloatDelay(Tiles[i], "RotationAngle", 0, 0.25 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
+//      TAnimator.AnimateFloatDelay(tiles[i], "RotationAngle", - 20, 0.1 * slowdown, 0 * slowdown, TAnimationType.InOut, TInterpolationType.Linear);
+//      TAnimator.AnimateFloatDelay(tiles[i], "RotationAngle", 20, 0.25 * slowdown, 0.1 * slowdown, TAnimationType.InOut, TInterpolationType.Exponential);
+//      TAnimator.AnimateFloatDelay(tiles[i], "RotationAngle", 0, 0.25 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
 //    }
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			QRect OrigGeometry = Tile->geometry();
-			QRect geometry = OrigGeometry;
+			Tile tile = tiles[i];
+			QRect origGeometry = tile->geometry();
+			QRect geometry = origGeometry;
 
-			int offset = round(double(TileSize) / 4);
-			int size = round(double(TileSize) / 2);
+			int offset = round(double(tileSize) / 4);
+			int size = round(double(tileSize) / 2);
 
-			int X = geometry.x()  + offset;
-			int Y = geometry.y() + offset;
+			int x = geometry.x()  + offset;
+			int y = geometry.y() + offset;
 
-			geometry.setRect(X, Y, size, size);
-			AnimatePropertyDelay(Tile, "geometry", geometry, 300, (0 + 30 * i), QEasingCurve::InBack);
-			AnimatePropertyDelay(Tile, "geometry", OrigGeometry, 300, (350 + 30 * i), QEasingCurve::OutBack);
+			geometry.setRect(x, y, size, size);
+			animatePropertyDelay(tile, "geometry", geometry, 300, (0 + 30 * i), QEasingCurve::InBack);
+			animatePropertyDelay(tile, "geometry", origGeometry, 300, (350 + 30 * i), QEasingCurve::OutBack);
 		}
 
 }
 
 
 
-void TForm15Puzzle::AnimatePrepareBeforePlace()
+void Form15Puzzle::animatePrepareBeforePlace()
 {
-	CalcConsts();
+	calcConsts();
 
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			uint16_t Row = 0, Col = 0;
-			DivMod(i, Base, Row, Col);
+			Tile tile = tiles[i];
+			int col = i % base;
+			int row = i / base;
 
-			QRect geometry = Tile->geometry();
-			int X = SpaceX + round(Col * (TileSize + TileSpacing));
-			int Y = SpaceY + round(Row * (TileSize + TileSpacing));
+			QRect geometry = tile->geometry();
+			int x = spaceX + round(col * (tileSize + tileSpacing));
+			int y = spaceY + round(row * (tileSize + tileSpacing));
 
-			X = X  + round(double(TileSize) / 2);
-			Y = Y + TileSize;
+			x = x  + round(double(tileSize) / 2);
+			y = y + tileSize;
 
-			geometry.setRect(X, Y, 0, 0);
+			geometry.setRect(x, y, 0, 0);
 
 
-			Tile->setGeometry(geometry);
-			Tile->setStyleSheet(GenerateTileStyleSheet(TileFillNormalColor1, TileFillNormalColor2));
-			Tile->show();
+			tile->setGeometry(geometry);
+			tile->setStyleSheet(generateTileStyleSheet(tileFillNormalColor1, tileFillNormalColor2));
+			tile->show();
 		}
 }
 
 
 
 
-void TForm15Puzzle::AnimateTimeRunningOut()
+void Form15Puzzle::animateTimeRunningOut()
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
-			GradientAni->StopColor1 = TileFillNormalColor1;
-			GradientAni->StopColor2 = QColor("darkorange");
-			GradientAni->Delay_ms = 0;
-			GradientAni->Duration_ms = 150;
-			GradientAni->AutoReverse = true;
-			GradientAni->Start();
+			Tile tile = tiles[i];
+			GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
+			gradientAni->stopColor1 = tileFillNormalColor1;
+			gradientAni->stopColor2 = QColor("darkorange");
+			gradientAni->delay_ms = 0;
+			gradientAni->duration_ms = 150;
+			gradientAni->autoReverse = true;
+			gradientAni->start();
 		}
 }
 
 
-void TForm15Puzzle::AnimateTimeOver()
+void Form15Puzzle::animateTimeOver()
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
-			GradientAni->Stop();
-			GradientAni->StopColor1 = Qt::gray;
-			GradientAni->StopColor2 = Qt::red;
-			GradientAni->Delay_ms = 0;
-			GradientAni->Duration_ms = 600;
-			GradientAni->AutoReverse = false;
-			GradientAni->Start();
+			Tile tile = tiles[i];
+			GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
+			gradientAni->stop();
+			gradientAni->stopColor1 = Qt::gray;
+			gradientAni->stopColor2 = Qt::red;
+			gradientAni->delay_ms = 0;
+			gradientAni->duration_ms = 600;
+			gradientAni->autoReverse = false;
+			gradientAni->start();
 		}
 }
 
 
-void TForm15Puzzle::AnimateNormalizeTilesColor()
+void Form15Puzzle::animateNormalizeTilesColor()
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
-			GradientAni->StopColor1 = TileFillNormalColor1;
-			GradientAni->StopColor2 = TileFillNormalColor2;
-			GradientAni->Delay_ms = 0;
-			GradientAni->Duration_ms = 500;
-			GradientAni->AutoReverse = false;
-			GradientAni->Start();
+			Tile tile = tiles[i];
+			GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
+			gradientAni->stopColor1 = tileFillNormalColor1;
+			gradientAni->stopColor2 = tileFillNormalColor2;
+			gradientAni->delay_ms = 0;
+			gradientAni->duration_ms = 500;
+			gradientAni->autoReverse = false;
+			gradientAni->start();
 		}
 }
 
 
 
 
-void TForm15Puzzle::AnimatePuzzleMatched()
+void Form15Puzzle::animatePuzzleMatched()
 {
-	for (uint i = 0; i < Tiles.size(); i++)
-		if (Tiles[i] != NULL)
+	for (uint i = 0; i < tiles.size(); i++)
+		if (tiles[i] != NULL)
 		{
-			TTile Tile = Tiles[i];
-//			TAnimator.AnimateFloatDelay(Tile, "RotationAngle", 360, 1 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
-			TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
-			GradientAni->Stop();
-			GradientAni->StopColor1 = QColor("lawngreen");
-			GradientAni->StopColor2 = QColor("gold");
-			GradientAni->Delay_ms = (1 + i * 100);
-			GradientAni->Duration_ms = 500 ;
-			GradientAni->AutoReverse = false;
-			GradientAni->Start();
+			Tile tile = tiles[i];
+//			TAnimator.AnimateFloatDelay(tile, "RotationAngle", 360, 1 * slowdown, 0.35 * slowdown, TAnimationType.Out, TInterpolationType.Back);
+			GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
+			gradientAni->stop();
+			gradientAni->stopColor1 = QColor("lawngreen");
+			gradientAni->stopColor2 = QColor("gold");
+			gradientAni->delay_ms = (1 + i * 100);
+			gradientAni->duration_ms = 500 ;
+			gradientAni->autoReverse = false;
+			gradientAni->start();
 		}
 }
 
 //-------------------------------  Test different Animations   -----------------------------
 
-void TForm15Puzzle::on_ButtonPlace_clicked()
+void Form15Puzzle::on_buttonPlace_clicked()
 {
-	AnimateNormalizeTilesColor();
-	AnimatePlaceTilesFast();
+	animateNormalizeTilesColor();
+	animatePlaceTilesFast();
 }
 
-void TForm15Puzzle::on_ButtonDisappeare_clicked()
+void Form15Puzzle::on_buttonDisappeare_clicked()
 {
-	AnimateTilesDisappeare();
+	animateTilesDisappeare();
 }
 
 
 
-void TForm15Puzzle::on_ButtonPuzzleMatched_clicked()
+void Form15Puzzle::on_buttonPuzzleMatched_clicked()
 {
-	AnimatePuzzleMatched();
+	animatePuzzleMatched();
 }
 
-void TForm15Puzzle::on_ButtonTimeRunningOut_clicked()
+void Form15Puzzle::on_buttonTimeRunningOut_clicked()
 {
-	AnimateTimeRunningOut();
+	animateTimeRunningOut();
 }
 
-void TForm15Puzzle::on_ButtonTimeOver_clicked()
+void Form15Puzzle::on_buttonTimeOver_clicked()
 {
-	AnimateTimeOver();
+	animateTimeOver();
 }
 
 
 //---------------------------  Realization of Property Animation   -----------------------------
 
 
-QPropertyAnimation* AnimatePropertyDelay(QObject * const Target, const QByteArray &PropertyName,
-				  const QVariant &Value, uint Duration_ms, uint Delay_ms,
-				  QEasingCurve AInterpolation, bool DeleteWhenStopped, bool WaitAnimationEnd)
+QPropertyAnimation* animatePropertyDelay(QObject * const target, const QByteArray &propertyName,
+				  const QVariant &value, uint duration_ms, uint delay_ms,
+				  QEasingCurve interpolation, bool deleteWhenStopped, bool waitAnimationEnd)
 {
-	QPropertyAnimation *ani = new QPropertyAnimation(Target, PropertyName);
-	ani->setDuration(Duration_ms);
+	QPropertyAnimation *ani = new QPropertyAnimation(target, propertyName);
+	ani->setDuration(duration_ms);
 
-	ani->setEasingCurve(AInterpolation);
+	ani->setEasingCurve(interpolation);
 
-	ani->setEndValue(Value);
+	ani->setEndValue(value);
 
 //	QObject::connect(ani, &QPropertyAnimation::finished, [=](){
-//		if (DeleteWhenStopped)
+//		if (deleteWhenStopped)
 //				delete ani;
 //	});
-	if (DeleteWhenStopped)
+	if (deleteWhenStopped)
 		QObject::connect(ani, &QPropertyAnimation::finished, ani, &QPropertyAnimation::deleteLater);
 
 
-	if (Delay_ms == 0)
+	if (delay_ms == 0)
 		ani->start();
 	else
-		QTimer::singleShot(Delay_ms, ani, SLOT(start()));
+		QTimer::singleShot(delay_ms, ani, SLOT(start()));
 
 
-	if (WaitAnimationEnd)
+	if (waitAnimationEnd)
 		while (ani->state() == QPropertyAnimation::Running)
 		{
 			qApp->processEvents();
@@ -712,157 +710,157 @@ QPropertyAnimation* AnimatePropertyDelay(QObject * const Target, const QByteArra
 
 //-----------------------------   Realization of Gradient Animation    -----------------------------
 
-QColor InterpolateColor(const QColor &Start, const QColor &Stop, double T)
+QColor interpolateColor(const QColor &start, const QColor &stop, double T)
 {
-	QColor Result;
-	Result.setAlpha( Start.alpha() + ((Stop.alpha()   - Start.alpha()) * T));
-	Result.setRed(   Start.red()   + ((Stop.red()     - Start.red()  ) * T));
-	Result.setGreen( Start.green() + ((Stop.green()   - Start.green()) * T));
-	Result.setBlue(  Start.blue()  + ((Stop.blue()    - Start.blue() ) * T));
-	return Result;
+	QColor result;
+	result.setAlpha( start.alpha() + ((stop.alpha()   - start.alpha()) * T));
+	result.setRed(   start.red()   + ((stop.red()     - start.red()  ) * T));
+	result.setGreen( start.green() + ((stop.green()   - start.green()) * T));
+	result.setBlue(  start.blue()  + ((stop.blue()    - start.blue() ) * T));
+	return result;
 }
 
 
 
-TGradientAnimation::TGradientAnimation(QWidget *ATarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc)
+GradientAnimation::GradientAnimation(QWidget *aTarget, TGenerateStyleSheetFunc AGenerateStyleSheetFunc)
 {
-	Target = ATarget;
-	GenerateStyleSheetFunc = AGenerateStyleSheetFunc;
-	timeLine = new QTimeLine(Duration_ms, Target);
+	target = aTarget;
+	generateStyleSheetFunc = AGenerateStyleSheetFunc;
+	timeLine = new QTimeLine(duration_ms, target);
   
-	int FrameRange = 1023;
-	timeLine->setFrameRange(0, FrameRange);
+	int frameRange = 1023;
+	timeLine->setFrameRange(0, frameRange);
   
 	QObject::connect(timeLine, &QTimeLine::frameChanged, [=](int frame){
-		double NormalizedTime = double(frame) / FrameRange;
+		double normalizedTime = double(frame) / frameRange;
   
-		if (AutoReverse)
+		if (autoReverse)
 		{
-			if (NormalizedTime < 0.5)
-				NormalizedTime = NormalizedTime * 2;
+			if (normalizedTime < 0.5)
+				normalizedTime = normalizedTime * 2;
 			else
-				NormalizedTime = (1 - NormalizedTime) * 2;
+				normalizedTime = (1 - normalizedTime) * 2;
 		}
   
-		CurColor1 = InterpolateColor(StartColor1, StopColor1, NormalizedTime);
-		CurColor2 = InterpolateColor(StartColor2, StopColor2, NormalizedTime);
+		curColor1 = interpolateColor(startColor1, stopColor1, normalizedTime);
+		curColor2 = interpolateColor(startColor2, stopColor2, normalizedTime);
 
-		Target->setStyleSheet(GenerateStyleSheetFunc(CurColor1, CurColor2));
+		target->setStyleSheet(generateStyleSheetFunc(curColor1, curColor2));
 	});
 }
 
-TGradientAnimation::~TGradientAnimation()
+GradientAnimation::~GradientAnimation()
 {
 //	QObject::connect(timeLine, &QTimeLine::finished, timeLine, &QTimeLine::deleteLater);
 	timeLine->stop();
 	delete timeLine;
 }
 
-void TGradientAnimation::Stop()
+void GradientAnimation::stop()
 {
 	timeLine->stop();
 }
 
-void TGradientAnimation::SetCurColors(QColor ACurColor1, QColor ACurColor2)
+void GradientAnimation::setCurColors(QColor aCurColor1, QColor aCurColor2)
 {
-	CurColor1 = ACurColor1;
-	CurColor2 = ACurColor2;
+	curColor1 = aCurColor1;
+	curColor2 = aCurColor2;
 }
 
-void TGradientAnimation::Start()
+void GradientAnimation::start()
 {
-	timeLine->setEasingCurve(AInterpolation);
+	timeLine->setEasingCurve(interpolation);
 
-	StartColor1 = CurColor1;
-	StartColor2 = CurColor2;
+	startColor1 = curColor1;
+	startColor2 = curColor2;
 
-	if (AutoReverse)
-		timeLine->setDuration(Duration_ms * 2);
+	if (autoReverse)
+		timeLine->setDuration(duration_ms * 2);
 	else
-		timeLine->setDuration(Duration_ms);
+		timeLine->setDuration(duration_ms);
 
 
 
-	if (Delay_ms == 0)
+	if (delay_ms == 0)
 		timeLine->start();
 	else
-		QTimer::singleShot(Delay_ms, timeLine, SLOT(start()));
+		QTimer::singleShot(delay_ms, timeLine, SLOT(start()));
 }
 
 
-//void TForm15Puzzle::on_ChangeBackground_clicked()
+//void Form15Puzzle::on_ChangeBackground_clicked()
 //{
-//TGradientAnimation *GradientAni = (TGradientAnimation*)Tile->property("GradientAni").value<void *>() ;
+//GradientAnimation *gradientAni = (GradientAnimation*)tile->property("gradientAni").value<void *>() ;
 
-//	GradientAni->StopColor1 = QColor("olive");;
-//	GradientAni->StopColor2 = QColor("darkorange");
-//	GradientAni->Delay_ms = 0;
-//	GradientAni->Duration_ms = 500;
-//	GradientAni->AutoReverse = true;
-//	GradientAni->Start();
+//	gradientAni->stopColor1 = QColor("olive");;
+//	gradientAni->stopColor2 = QColor("darkorange");
+//	gradientAni->delay_ms = 0;
+//	gradientAni->duration_ms = 500;
+//	gradientAni->autoReverse = true;
+//	gradientAni->start();
 //}
 
 //-----------------------------   -----------------------------	-----------------------------
 
 
-void TForm15Puzzle::on_ButtonScaleForAndroid_clicked()
+void Form15Puzzle::on_buttonScaleForAndroid_clicked()
 {
 	QFont font = qApp->font();
 	font.setPointSize(12);
 	qApp->setFont(font);
 
-	int ButtonSize =  ui->PanelClient->width() / 8;
+	int buttonSize =  ui->panelClient->width() / 8;
 
-	ui->Button3x3->setMaximumSize(ButtonSize, 16777215);
-	ui->Button4x4->setMaximumSize(ButtonSize, 16777215);
-	ui->Button5x5->setMaximumSize(ButtonSize, 16777215);
+	ui->button3x3->setMaximumSize(buttonSize, 16777215);
+	ui->button4x4->setMaximumSize(buttonSize, 16777215);
+	ui->button5x5->setMaximumSize(buttonSize, 16777215);
 
-	ui->TextTime->setMinimumSize(ButtonSize * 1.3, 16777215);
+	ui->textTime->setMinimumSize(buttonSize * 1.3, 16777215);
 
-	font = ui->TextTime->font();
+	font = ui->textTime->font();
 	font.setPointSize(17);
-	ui->TextTime->setFont(font);
+	ui->textTime->setFont(font);
 }
 
 
-void TForm15Puzzle::on_PanelClient_clicked()
+void Form15Puzzle::on_panelClient_clicked()
 {
-	uint TimeFromLastTap_ms = LastTapTime.msecsTo(QDateTime::currentDateTime());
+	uint timeFromLastTap_ms = lastTapTime.msecsTo(QDateTime::currentDateTime());
 
-	if (not (LastTapTime.isNull()) and (TimeFromLastTap_ms < 300))
-	  ShowDebug();
+	if (not (lastTapTime.isNull()) and (timeFromLastTap_ms < 300))
+	  showDebug();
 
-	LastTapTime = QDateTime::currentDateTime();
+	lastTapTime = QDateTime::currentDateTime();
 }
 
-void TForm15Puzzle::ShowDebug()
+void Form15Puzzle::showDebug()
 {
-	if (not ui->PanelDebug->isVisible())
+	if (not ui->panelDebug->isVisible())
 	{
-	  PanelDebugMaximumHeight = ui->TextTime->height() * 2;
-	  ui->PanelDebug->setMaximumHeight(0);
-	  ui->PanelDebug->setVisible(true);
+	  panelDebugMaximumHeight = ui->textTime->height() * 2;
+	  ui->panelDebug->setMaximumHeight(0);
+	  ui->panelDebug->setVisible(true);
 	};
 
 
-	if (ui->PanelDebug->maximumHeight() < 10)
-		AnimatePropertyDelay(ui->PanelDebug, "maximumHeight", PanelDebugMaximumHeight, 400, 0, QEasingCurve::OutBounce);
+	if (ui->panelDebug->maximumHeight() < 10)
+		animatePropertyDelay(ui->panelDebug, "maximumHeight", panelDebugMaximumHeight, 400, 0, QEasingCurve::OutBounce);
 	else
-		AnimatePropertyDelay(ui->PanelDebug, "maximumHeight", 0, 400, 0, QEasingCurve::InBack);
+		animatePropertyDelay(ui->panelDebug, "maximumHeight", 0, 400, 0, QEasingCurve::InBack);
 
 }
 
-bool TMyEventFilter::eventFilter(QObject *obj, QEvent *event)
+bool MyEventFilter::eventFilter(QObject *obj, QEvent *event)
 {
 //	qDebug("event type %d", event->type());
 	if ((event->type() == QEvent::MouseButtonPress) or
 		(event->type() == QEvent::MouseButtonDblClick)) {
-		parent->on_PanelClient_clicked();
+		parent->on_panelClient_clicked();
 		return true;
 	} else if (event->type() == QEvent::Resize) {
-		parent->TimerResize->stop();
-		parent->TimerResize->start();
-//		qDebug() << QString("event Resize  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
+		parent->timerResize->stop();
+		parent->timerResize->start();
+//		qDebug() << QString("event resize  ") << QDateTime::currentDateTime().toString("mm:ss:zzz");
 
 		return true;
 	}
